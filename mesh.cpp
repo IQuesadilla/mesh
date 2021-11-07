@@ -190,9 +190,9 @@ mesh::message mesh::receiveUDP()
     while (true)
     {
         int tempcount = recvfrom (udpsock, recvdata, BUFFLEN, MSG_DONTWAIT, (struct sockaddr *) &recvaddr, &recvaddrlen);
-        if (tempcount == -1)
+        if (tempcount == -1 || tempcount == 0)
             break;
-        recvbuff.insert(recvbuff.end(),&recvdata[0],&recvdata[tempcount]);
+        recvbuff.insert(recvbuff.end(),recvdata,recvdata + tempcount);
     }
 
     if (recvbuff.size() <= 0)
@@ -201,7 +201,8 @@ mesh::message mesh::receiveUDP()
     std::vector<int8_t> prefix {'-','-','<'};
     if (!std::equal(prefix.begin(),prefix.end(),recvbuff.begin()))
         return {std::string(),std::vector<uint8_t>()};
-
+    else
+        recvbuff.erase(recvbuff.begin(),recvbuff.begin()+3);
     
     std::cout << recvbuff.size() << " " << std::flush;
 

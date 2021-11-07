@@ -8,12 +8,14 @@
 void audioRecordingCallback(void* userdata, Uint8* stream, int len)
 {
     std::vector<uint8_t> buffer;
-    uint8_t *tempstream = (uint8_t*)malloc(len);
-    SDL_MixAudioFormat(tempstream, stream, AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
+    uint8_t *tempstream = stream;//(uint8_t*)malloc(len);
+    //SDL_MixAudioFormat(tempstream, stream, AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
+    //sprintf(tempstream,"PENIS!");
     buffer.insert(buffer.end(),&tempstream[0],&tempstream[len]);
     int count = ((mesh*)userdata)->sendUDP({CLIENTNAME,buffer});
-    std::cout << count << ' ' << std::flush;
-    free(tempstream);
+    if (count != -1)
+        std::cout << count << ' ' << std::flush;
+    //free(tempstream);
     //memset(0,0,10000);
     return;
 }

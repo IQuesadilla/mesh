@@ -7,18 +7,26 @@
 
 void audioPlaybackCallback(void* userdata, Uint8* stream, int len)
 {
-    //std::string buffer ((char*)stream,len);
-    //mesh::message messagebuffer = ((mesh*)userdata)->receiveUDP();
-    //if (messagebuffer.data.size() <= 0)
-    //    return;
+    auto tempmesh = ((mesh*)userdata);
 
-    //uint8_t *tempbuffer = (uint8_t*)malloc(len);
-    SDL_memset(stream, '\0', len);
+    //std::string buffer ((char*)stream,len);
+    mesh::message messagebuffer = tempmesh->receiveUDP();
+    if (messagebuffer.data.size() <= 0)
+        return;
+    if (messagebuffer.data.size() < len) len = messagebuffer.data.size();
+
+    for (int i = 0; i < len; ++i)
+        if(messagebuffer.data[i] == '-' || messagebuffer.data[i] == '<')
+            {messagebuffer.data.erase(messagebuffer.data.begin() + i); --len;}
+
+    //char *tempbuffer = (char*)malloc(len+1);
+    //SDL_memset(tempbuffer, '\0', len+1);
     //SDL_memset(&tempbuffer[len/2], 255, len/2);
-    if (((mesh*)userdata)->dumbshit.size() < len) len = ((mesh*)userdata)->dumbshit.size();
-    SDL_MixAudioFormat(stream, ((mesh*)userdata)->dumbshit.data(), AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
-    ((mesh*)userdata)->dumbshit.erase(((mesh*)userdata)->dumbshit.begin(),((mesh*)userdata)->dumbshit.begin()+len);
-    std::cout << len << ' ' << std::flush;
+    SDL_memcpy(stream, messagebuffer.data.data(), len);
+    //std::cout << "Buffered value: " << tempbuffer << std::endl;
+    //SDL_MixAudioFormat(stream, messagebuffer.data.data(), AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
+    //((mesh*)userdata)->dumbshit.erase(((mesh*)userdata)->dumbshit.begin(),((mesh*)userdata)->dumbshit.begin()+len);
+    //std::cout << len << ' ' << std::flush;
     //memset(0,0,10000);
     return;
 }
@@ -96,8 +104,12 @@ int main (int argc, char **argv)
     {
         //SDL_PauseAudioDevice(audioid, SDL_TRUE);
         //SDL_LockAudioDevice(audioid);
-        auto tempdumbshit = temp->receiveUDP();
-        temp->dumbshit.insert(temp->dumbshit.end(),tempdumbshit.data.begin(),tempdumbshit.data.end());
+        //auto tempdumbshit = temp->receiveUDP();
+        //char *tempstring = (char*)malloc (tempdumbshit.data.size()+1);
+        //SDL_memset (tempstring,'\0',tempdumbshit.data.size()+1);
+        //SDL_memcpy(tempstring,tempdumbshit.data.data(),tempdumbshit.data.size());
+        //std::cout << "True Value: " << tempstring << std::endl;
+        //temp->dumbshit.insert(temp->dumbshit.end(),tempdumbshit.data.begin(),tempdumbshit.data.end());
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         //SDL_UnlockAudioDevice(audioid);
         //SDL_PauseAudioDevice(audioid, SDL_FALSE);
