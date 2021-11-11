@@ -14,7 +14,7 @@
 #include <map>
 
 #define BCADDR "10.42.0.255"
-#define MYADDR "10.42.0.1"
+#define MYADDR "10.42.0.104"
 
 #define BCPORT 1999
 #define TCPPORT 1998

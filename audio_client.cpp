@@ -82,8 +82,20 @@ int initaudio(mesh *tempmesh)
         desiredRecordingSpec.callback = audioPlaybackCallback;
         desiredRecordingSpec.userdata = (void*)tempmesh;
 
+	std::cout << "Requested Spec: " << std::endl\
+		<< "    Freq: " << desiredRecordingSpec.freq << std::endl\
+		<< "    Format: " << desiredRecordingSpec.format << std::endl\
+		<< "    Channels: " << desiredRecordingSpec.channels << std::endl\
+		<< "    Samples: " << desiredRecordingSpec.samples << std::endl;
+
         //Open recording device
         recordingDeviceId = SDL_OpenAudioDevice( SDL_GetAudioDeviceName( index, SDL_FALSE ), SDL_FALSE, &desiredRecordingSpec, &gReceivedRecordingSpec, 0 );
+
+	std::cout << "Recieved Spec: " << std::endl\
+		<< "    Freq: " << gReceivedRecordingSpec.freq << std::endl\
+		<< "    Format: " << gReceivedRecordingSpec.format << std::endl\
+		<< "    Channels: " << gReceivedRecordingSpec.channels << std::endl\
+		<< "    Samples: " << gReceivedRecordingSpec.samples << std::endl;
     }
     return recordingDeviceId;
 }
