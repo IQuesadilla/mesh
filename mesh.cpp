@@ -14,7 +14,7 @@ int mesh::initserver(std::string name)
     connected = false;
     setName(name);
     initBroadcastSocket();
-    initListenSocket();
+    //initListenSocket();
     initUDPSocket();
 
     myName = name;
@@ -129,8 +129,8 @@ int mesh::sendTCP(mesh::message value)
         return 1;
 
     std::vector<uint8_t> prefix {'-','-','<'};
-    value.data.insert(value.data.begin(),prefix.begin(),prefix.end());
-    int count = send (sendsock, value.data.data(), value.data.size(),0);
+    value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
+    int count = send (sendsock, value.data->data(), value.data->size(),0);
     if (count == -1)
         return 1;
     return 0;
@@ -142,18 +142,18 @@ mesh::message mesh::recieveTCP(std::string name)
     for (auto &x : connections)
         recvsock = (x.devname == name) ? x.connsock : recvsock;
     if (recvsock == -1)
-        return {std::string(),std::vector<uint8_t>()};
+        return {NULL,NULL};//{std::string(),std::vector<uint8_t>()};
 
     char *recvdata = (char*)malloc(BUFFLEN);
-    std::vector<uint8_t> recvbuff;
+    std::shared_ptr<std::vector<uint8_t> > recvbuff;
     int count = recv (recvsock, recvdata, BUFFLEN, MSG_DONTWAIT);
     if (count == -1)
-        return {std::string(),std::vector<uint8_t>()};
-    recvbuff.insert(recvbuff.end(),&recvdata[0],&recvdata[count]);
+        return {NULL,NULL}; //{std::string(),std::vector<uint8_t>()};
+    recvbuff->insert(recvbuff->end(),&recvdata[0],&recvdata[count]);
 
     std::vector<int8_t> prefix {'-','-','<'};
-    if (!std::equal(prefix.begin(),prefix.end(),recvbuff.begin()))
-        return {*new std::string,*new std::vector<uint8_t>};
+    if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
+        return {NULL,NULL};// {*new std::string,*new std::vector<uint8_t>};
 
     return {name,recvbuff};
 }
@@ -173,38 +173,42 @@ int mesh::sendUDP(mesh::message value)
     udpaddr.sin_port = htons(UDPPORT);
 
     std::vector<uint8_t> prefix {'-','-','<'};
-    value.data.insert(value.data.begin(),prefix.begin(),prefix.end());
-    int count = sendto (udpsock, value.data.data(), value.data.size(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
+    value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
+    int count = sendto (udpsock, value.data->data(), value.data->size(),MSG_WAITFORONE,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
     return count - 3;
 }
 
 mesh::message mesh::receiveUDP()
 {
     std::string recvname;
-    std::vector<uint8_t> recvbuff;
+    std::shared_ptr<std::vector<uint8_t> > recvbuff;
+    recvbuff.reset(new std::vector<uint8_t>);
     char *recvdata = (char*)malloc(BUFFLEN);
+    memset(recvdata,'\0',BUFFLEN);
 
     sockaddr_in recvaddr;
     socklen_t recvaddrlen = sizeof(recvaddr);
     int count = 0;
-    while (true)
-    {
-        int tempcount = recvfrom (udpsock, recvdata, BUFFLEN, MSG_DONTWAIT, (struct sockaddr *) &recvaddr, &recvaddrlen);
-        if (tempcount == -1 || tempcount == 0)
-            break;
-        recvbuff.insert(recvbuff.end(),recvdata,recvdata + tempcount);
-    }
+    //while (true)
+    //{
+        int tempcount = recvfrom (udpsock, recvdata, BUFFLEN, 0, (struct sockaddr *) &recvaddr, &recvaddrlen);
+        //std::cout << "I receieved some DATA! " << tempcount << std::endl;
+        //if (tempcount == -1 || tempcount == 0)
+    //        break;
+        recvbuff->insert(recvbuff->end(),recvdata,&recvdata[tempcount]);
+    //}
+    //free(recvdata);
 
-    if (recvbuff.size() <= 0)
-        return {std::string(),std::vector<uint8_t>()};
+    if (recvbuff->size() <= 0)
+        return {std::string(),NULL};
 
     std::vector<int8_t> prefix {'-','-','<'};
-    if (!std::equal(prefix.begin(),prefix.end(),recvbuff.begin()))
-        return {std::string(),std::vector<uint8_t>()};
+    if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
+        return {std::string(),NULL};
     else
-        recvbuff.erase(recvbuff.begin(),recvbuff.begin()+3);
+        recvbuff->erase(recvbuff->begin(),recvbuff->begin()+3);
     
-    std::cout << recvbuff.size() << " " << std::flush;
+    //std::cout << recvbuff->size() << " " << std::flush;
 
     for (auto &d : devices)
         recvname = (recvaddr.sin_addr.s_addr == d.address) ? d.name : "";

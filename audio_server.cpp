@@ -7,14 +7,16 @@
 
 void audioRecordingCallback(void* userdata, Uint8* stream, int len)
 {
-    std::vector<uint8_t> buffer;
+    std::shared_ptr<std::vector<uint8_t> > buffer;
+    buffer.reset(new std::vector<uint8_t>);
     uint8_t *tempstream = stream;//(uint8_t*)malloc(len);
     //SDL_MixAudioFormat(tempstream, stream, AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
     //sprintf(tempstream,"PENIS!");
-    buffer.insert(buffer.end(),&tempstream[0],&tempstream[len]);
+    buffer->insert(buffer->end(),&tempstream[0],&tempstream[len]);
     int count = ((mesh*)userdata)->sendUDP({CLIENTNAME,buffer});
-    if (count != -1)
-        std::cout << count << ' ' << std::flush;
+    //if (count != -1)
+        //std::cout << count << ' ' << std::flush;
+    buffer.reset();
     //free(tempstream);
     //memset(0,0,10000);
     return;
@@ -65,10 +67,10 @@ int initaudio(mesh *tempmesh)
         //Default audio spec
         SDL_AudioSpec desiredRecordingSpec;
         SDL_zero(desiredRecordingSpec);
-        desiredRecordingSpec.freq = 28160;
-        desiredRecordingSpec.format = AUDIO_U8;
-        desiredRecordingSpec.channels = 1;
-        desiredRecordingSpec.samples = 64;
+        desiredRecordingSpec.freq = AFREQ;
+        desiredRecordingSpec.format = AFORMAT;
+        desiredRecordingSpec.channels = ACHANNELS;
+        desiredRecordingSpec.samples = ASAMPLES;
         desiredRecordingSpec.callback = audioRecordingCallback;
         desiredRecordingSpec.userdata = (void*)tempmesh;
 

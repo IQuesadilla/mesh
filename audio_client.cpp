@@ -9,20 +9,34 @@ void audioPlaybackCallback(void* userdata, Uint8* stream, int len)
 {
     auto tempmesh = ((mesh*)userdata);
 
-    //std::string buffer ((char*)stream,len);
-    mesh::message messagebuffer = tempmesh->receiveUDP();
-    if (messagebuffer.data.size() <= 0)
-        return;
-    if (messagebuffer.data.size() < len) len = messagebuffer.data.size();
+    if (tempmesh->dumbshit.size() == 0)
+    {
+        SDL_memset(stream,'\0',len);
+    }
 
-    for (int i = 0; i < len; ++i)
-        if(messagebuffer.data[i] == '-' || messagebuffer.data[i] == '<')
-            {messagebuffer.data.erase(messagebuffer.data.begin() + i); --len;}
+    //std::string buffer ((char*)stream,len);
+    if (tempmesh->dumbshit.size() < len)
+    {
+        len = tempmesh->dumbshit.size();
+        //std::cout << "Is the server sending enough DATA?!?!?" << std::endl;
+    }
 
     //char *tempbuffer = (char*)malloc(len+1);
     //SDL_memset(tempbuffer, '\0', len+1);
     //SDL_memset(&tempbuffer[len/2], 255, len/2);
-    SDL_memcpy(stream, messagebuffer.data.data(), len);
+    tempmesh->dumbshitsafety.lock();
+    SDL_memcpy(stream, tempmesh->dumbshit.data(), len);
+    tempmesh->dumbshit.erase(tempmesh->dumbshit.begin(),tempmesh->dumbshit.begin()+len);
+    //std::cout << tempmesh->dumbshit.size() << std::endl;
+
+    //if (tempmesh->cocksafety == 1000)
+    //{
+    //if (tempmesh->dumbshit.size() > 512)
+    //    tempmesh->dumbshit.erase(tempmesh->dumbshit.begin(),tempmesh->dumbshit.end()-512);
+    //    tempmesh->cocksafety = 0;
+    //}
+    //else ++tempmesh->cocksafety;
+    tempmesh->dumbshitsafety.unlock();
     //std::cout << "Buffered value: " << tempbuffer << std::endl;
     //SDL_MixAudioFormat(stream, messagebuffer.data.data(), AUDIO_U8, len, SDL_MIX_MAXVOLUME*0.75f);
     //((mesh*)userdata)->dumbshit.erase(((mesh*)userdata)->dumbshit.begin(),((mesh*)userdata)->dumbshit.begin()+len);
@@ -75,10 +89,10 @@ int initaudio(mesh *tempmesh)
         //Default audio spec
         SDL_AudioSpec desiredRecordingSpec;
         SDL_zero(desiredRecordingSpec);
-        desiredRecordingSpec.freq = 28160;
-        desiredRecordingSpec.format = AUDIO_U8;
-        desiredRecordingSpec.channels = 1;
-        desiredRecordingSpec.samples = 64;
+        desiredRecordingSpec.freq = AFREQ;
+        desiredRecordingSpec.format = AFORMAT;
+        desiredRecordingSpec.channels = ACHANNELS;
+        desiredRecordingSpec.samples = ASAMPLES;
         desiredRecordingSpec.callback = audioPlaybackCallback;
         desiredRecordingSpec.userdata = (void*)tempmesh;
 
@@ -114,6 +128,7 @@ int main (int argc, char **argv)
     std::cout << "Audio device unpaused" << std::endl;
     while (temp->isConnected())
     {
+        //std::this_thread::sleep_for(std::chrono::milliseconds(50));
         //SDL_PauseAudioDevice(audioid, SDL_TRUE);
         //SDL_LockAudioDevice(audioid);
         //auto tempdumbshit = temp->receiveUDP();
@@ -122,7 +137,23 @@ int main (int argc, char **argv)
         //SDL_memcpy(tempstring,tempdumbshit.data.data(),tempdumbshit.data.size());
         //std::cout << "True Value: " << tempstring << std::endl;
         //temp->dumbshit.insert(temp->dumbshit.end(),tempdumbshit.data.begin(),tempdumbshit.data.end());
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        mesh::message messagebuffer = temp->receiveUDP();
+        if (messagebuffer.name.length() == 0)
+        {
+            //std::cout << "No data recieved" << std::endl;
+            //std::this_thread::sleep_for(std::chrono::microseconds(10));
+            continue;
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+
+        std::vector<int8_t> prefix {'-','-','<'};
+        for (int i = 0; i < messagebuffer.data->size()-3; ++i)
+            if (std::equal(prefix.begin(),prefix.end(),messagebuffer.data->begin()+i))//(messagebuffer.data->at(i) == '-' || messagebuffer.data->at(i) == '<')
+                messagebuffer.data->erase(messagebuffer.data->begin() + i,messagebuffer.data->begin() + i + 3);
+        temp->dumbshitsafety.lock();
+        temp->dumbshit.insert(temp->dumbshit.end(),messagebuffer.data->begin(),messagebuffer.data->end());
+        temp->dumbshitsafety.unlock();
+        messagebuffer.data.reset();
         //SDL_UnlockAudioDevice(audioid);
         //SDL_PauseAudioDevice(audioid, SDL_FALSE);
     }

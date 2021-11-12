@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <error.h>
 #include <thread>
+#include <mutex>
 #include <vector>
 #include <chrono>
 #include <sstream>
@@ -23,8 +24,12 @@
 #define POLLDELAY 50
 #define UPDATETIME 200
 #define TIMEOUTTIME 1000
-#define BUFFLEN 1000
+#define BUFFLEN 2000
 
+#define AFREQ 56320
+#define AFORMAT AUDIO_S32MSB
+#define ACHANNELS 2
+#define ASAMPLES 64
 #define POLLCOUNT UPDATETIME / POLLDELAY
 
 class mesh
@@ -36,10 +41,12 @@ public:
     struct message
     {
         std::string name;
-        std::vector<uint8_t> data;
+        std::shared_ptr<std::vector<uint8_t> > data;
     };
 
+    std::mutex dumbshitsafety;
     std::vector<uint8_t> dumbshit;
+    int cocksafety = 0;
 
     int initserver(std::string name);
     int killserver();
