@@ -25,6 +25,7 @@
 #define UPDATETIME 200
 #define TIMEOUTTIME 1000
 #define BUFFLEN 2000
+#define MAXNAMELEN 20
 
 #define AFREQ 56320
 #define AFORMAT AUDIO_S32MSB
@@ -64,7 +65,8 @@ public:
     message recieveTCP(std::string name);
 
     int sendUDP(message value);
-    message receiveUDP(); // TODO change to return a vector of all recieved data
+    message receiveUDP();
+    message receiveUDP(std::string from);
 
     std::string returnDevices();
     int updateDeviceList();
