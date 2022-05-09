@@ -15,7 +15,7 @@ mesh.o: mesh.cpp mesh.h libtinyxml2.a
 interactive: interactive.cpp libmesh.so install
 	$(CXX) -o $@ $< $(LIBS)
 
-install:
+install: $(TARGET)
 	cp $(TARGET) /usr/lib 
 
 clean:

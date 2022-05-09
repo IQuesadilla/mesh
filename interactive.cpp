@@ -9,11 +9,16 @@ int main (int argc, char **argv)
     bool doLoop = true;
     while (doLoop)
     {
+        std::cout << " > ";
         std::cin >> buffer;
 
         if (buffer == "quit")
         {
             doLoop = false;
+        }
+        else if (buffer == "list")
+        {
+            std::cout << temp->returnDevices() << std::endl;
         }
         else if (buffer == "set")
         {
