@@ -193,7 +193,7 @@ mesh::message mesh::receiveUDP()
     std::vector<uint8_t> prefix {'-','-','<'};
     std::vector<uint8_t> postfix {'>','-','-'};
 
-    if (!std::equal(prefix.begin(),prefix.end(),namebuffer))
+    if (!std::equal(prefix.begin(),prefix.end(),namebuffer.begin()))
         return {std::string(),NULL};
     
     if(!std::equal(myName.begin(),myName.end(),namebuffer.begin() + 3))
@@ -213,7 +213,7 @@ mesh::message mesh::receiveUDP()
     }
     //free(recvdata);
 
-    std::vector<uint8_t> prefix {'-','-','<'};
+    //std::vector<uint8_t> prefix {'-','-','<'};
     if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
         return {std::string(),NULL};
     else
