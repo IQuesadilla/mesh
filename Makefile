@@ -2,6 +2,7 @@ CXX = g++
 CFLAGS = -o $@ -c $< -std=c++17
 TARGET = libmesh.so
 TESTS = interactive
+LIBS = -L. -lmesh -ltinyxml2 -lpthread
 
 all: libmesh.so
 
@@ -11,8 +12,11 @@ libmesh.so: mesh.o
 mesh.o: mesh.cpp mesh.h libtinyxml2.a
 	$(CXX) $(CFLAGS) -fPIC 
 
-interactive: interactive.cpp libmesh.so
-	$(CXX) $(CFLAGS) -lmesh
+interactive: interactive.cpp libmesh.so install
+	$(CXX) -o $@ $< $(LIBS)
+
+install:
+	cp $(TARGET) /usr/lib 
 
 clean:
 	-rm *.o
