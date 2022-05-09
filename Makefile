@@ -5,7 +5,7 @@ TARGET = libmesh.so
 all: mesh.o
 	$(CXX) -o $(TARGET) $< -shared
 
-mesh.o: mesh.cpp mesh.h
+mesh.o: mesh.cpp mesh.h libtinyxml2.a
 	$(CXX) $(CFLAGS)
 
 clean:

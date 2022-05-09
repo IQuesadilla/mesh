@@ -172,10 +172,16 @@ int mesh::sendUDP(mesh::message value)
     udpaddr.sin_addr.s_addr = sendaddr;
     udpaddr.sin_port = htons(UDPPORT);
 
-    std::vector<uint8_t> prefix {'-','-','<'};
-    value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
-    int count = sendto (udpsock, value.data->data(), value.data->size(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
-    return count - 3;
+    tinyxml2::XMLDocument doc;
+    doc.RootElement()->SetText(value.data->data());
+
+    tinyxml2::XMLPrinter printer;
+    doc.Print(&printer);
+
+    //std::vector<uint8_t> prefix {'-','-','<'};
+    //value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
+    int count = sendto (udpsock, printer.CStr(), printer.CStrSize(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
+    return count;
 }
 
 mesh::message mesh::receiveUDP()
@@ -185,7 +191,7 @@ mesh::message mesh::receiveUDP()
     recvbuff.reset(new std::vector<uint8_t>());
     sockaddr_in recvaddr;
     socklen_t recvaddrlen = sizeof(recvaddr);
-
+/*
     // GET NAME, IGNORE IF WRONG
     std::vector<uint8_t> namebuffer (MAXNAMELEN + 6);
     int namecount = recvfrom (udpsock, namebuffer.data(), MAXNAMELEN + 6, MSG_PEEK, (struct sockaddr *) &recvaddr, &recvaddrlen);
@@ -203,7 +209,7 @@ mesh::message mesh::receiveUDP()
 
     auto i = namebuffer.begin();
     for(; !std::equal(prefix.begin(),prefix.end(),i); std::advance(i,1));
-
+*/
     int tempcount = recv (udpsock, recvbuff->data(), BUFFLEN, 0);
     while (tempcount == -1 || tempcount == 0)
     {
@@ -213,6 +219,17 @@ mesh::message mesh::receiveUDP()
     }
     //free(recvdata);
 
+    tinyxml2::XMLDocument doc;
+    doc.Parse((const char*)recvbuff->data(),recvbuff->size());
+    if (doc.Error() == true)
+    {
+        doc.PrintError();
+        return {std::string(),NULL};
+    }
+
+    tinyxml2::XMLPrinter printer;
+    doc.Print(&printer);
+/*
     //std::vector<uint8_t> prefix {'-','-','<'};
     if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
         return {std::string(),NULL};
@@ -220,11 +237,17 @@ mesh::message mesh::receiveUDP()
         recvbuff->erase(recvbuff->begin(),recvbuff->begin()+3);
     
     //std::cout << recvbuff->size() << " " << std::flush;
+*/
+    std::shared_ptr<std::vector<uint8_t> > outdata;
+    outdata.reset();
+    outdata->resize(printer.CStrSize()+1);
+    std::copy(printer.CStr(),printer.CStr()+printer.CStrSize(),outdata->data());
+
 
     for (auto &d : devices)
         recvname = (recvaddr.sin_addr.s_addr == d.address) ? d.name : "";
 
-    return {recvname,recvbuff};
+    return {recvname,outdata};
 }
 
 mesh::message mesh::receiveUDP(std::string from)

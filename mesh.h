@@ -13,6 +13,7 @@
 #include <chrono>
 #include <sstream>
 #include <map>
+#include "tinyxml2.h"
 
 #define BCADDR "10.42.0.255"
 #define MYADDR "10.42.0.104"
