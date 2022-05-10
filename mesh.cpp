@@ -229,7 +229,7 @@ mesh::message mesh::receiveUDP()
     std::cout << "Bytes received: " << tempcount << " of [" << recvbuff->data() << "]" << std::endl;
 
     tinyxml2::XMLDocument doc;
-    doc.Parse((const char*)recvbuff->data(),tempcount);//,recvbuff->size());
+    doc.Parse((const char*)recvbuff->data(),tempcount+1);//,recvbuff->size());
     if (doc.Error() == true)
     {
         doc.PrintError();
