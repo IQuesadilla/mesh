@@ -229,15 +229,19 @@ mesh::message mesh::receiveUDP()
     std::cout << "Bytes received: " << tempcount << " of [" << recvbuff->data() << "] "  << strlen((const char*)recvbuff->data()) << std::endl;
 
     tinyxml2::XMLDocument doc;
-    doc.Parse((const char*)recvbuff->data(),tempcount+1);//,recvbuff->size());
+    doc.Parse((const char*)recvbuff->data(),tempcount);//,recvbuff->size());
     if (doc.Error() == true)
     {
         doc.PrintError();
         return {std::string(),NULL};
     }
 
+    std::cout << "Successfully parsed" << std::endl;
+
     tinyxml2::XMLPrinter printer;
     doc.Print(&printer);
+
+    std::cout << "Ready to print" << std::endl;
 /*
     //std::vector<uint8_t> prefix {'-','-','<'};
     if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
