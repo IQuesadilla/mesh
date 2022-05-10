@@ -175,7 +175,7 @@ int mesh::sendUDP(mesh::message value)
     std::cout << "Created XML from data" << std::endl;
     tinyxml2::XMLDocument doc;
     doc.NewElement("root");
-    doc.RootElement()->SetText(value.data->data());
+    doc.FirstChildElement("root")->SetText(value.data->data());
 
     std::cout << "Printing XML" << std::endl;
     tinyxml2::XMLPrinter printer;
