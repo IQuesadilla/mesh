@@ -172,15 +172,18 @@ int mesh::sendUDP(mesh::message value)
     udpaddr.sin_addr.s_addr = sendaddr;
     udpaddr.sin_port = htons(UDPPORT);
 
+    std::cout << "Created XML from data" << std::endl;
     tinyxml2::XMLDocument doc;
     doc.NewElement("root");
     doc.RootElement()->SetText(value.data->data());
 
+    std::cout << "Printing XML" << std::endl;
     tinyxml2::XMLPrinter printer;
     doc.Print(&printer);
 
     //std::vector<uint8_t> prefix {'-','-','<'};
     //value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
+    std::cout << "Sending XML data, " << printer.CStrSize() << " bytes" << std::endl;
     int count = sendto (udpsock, printer.CStr(), printer.CStrSize(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
     return count;
 }
