@@ -238,8 +238,9 @@ mesh::message mesh::receiveUDP()
 
     std::cout << "Successfully parsed" << std::endl;
 
-    tinyxml2::XMLPrinter printer;
-    doc.Print(&printer);
+    //tinyxml2::XMLPrinter printer;
+    //doc.Print(&printer);
+    std::string printer = doc.FirstChildElement()->Value();
 
     std::cout << "Ready to print" << std::endl;
 /*
@@ -251,10 +252,11 @@ mesh::message mesh::receiveUDP()
     
     //std::cout << recvbuff->size() << " " << std::flush;
 */
-    std::cout << "Creating vector of data " << printer.CStr() << std::endl;
+    std::cout << "Creating vector of data " << printer << std::endl;
     std::shared_ptr<std::vector<uint8_t> > outdata;
-    outdata.reset(new std::vector<uint8_t>(printer.CStr(),printer.CStr()+printer.CStrSize()));
-    std::cout << "Created vector" << std::endl;
+    outdata.reset(new std::vector<uint8_t>(printer.begin(),printer.end()));
+    outdata->push_back('\0');
+    std::cout << "Created vector of size " << outdata->size() << std::endl;
     //outdata->resize(printer.CStrSize()+1);
     //std::copy(printer.CStr(),printer.CStr()+printer.CStrSize(),outdata->data());
 
