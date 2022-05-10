@@ -58,7 +58,10 @@ int main (int argc, char **argv)
         else if (buffer == "recv")
         {
             auto value = temp->receiveUDP();
-            std::cout << value.name << ' ' << (char*)value.data->data() << '!' << std::endl;
+            if (value.name != "")
+                std::cout << value.name << ' ' << (char*)value.data->data() << '!' << std::endl;
+            else
+                std::cout << "Recv issues, failed" << std::endl;
         }
         else
         {
