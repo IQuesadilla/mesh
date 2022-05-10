@@ -173,6 +173,7 @@ int mesh::sendUDP(mesh::message value)
     udpaddr.sin_port = htons(UDPPORT);
 
     tinyxml2::XMLDocument doc;
+    doc.NewElement("root");
     doc.RootElement()->SetText(value.data->data());
 
     tinyxml2::XMLPrinter printer;
