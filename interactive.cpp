@@ -51,7 +51,7 @@ int main (int argc, char **argv)
             std::shared_ptr<std::vector<uint8_t> > databuff;
             databuff.reset(new std::vector<uint8_t>(datastring.begin(),datastring.end()));
             databuff->push_back('\0');
-            std::cout << "Sending" << std::endl;
+            std::cout << "Sending " << databuff->size() << " bytes of data" << std::endl;
             temp->sendUDP({buffer,databuff});
             std::cout << "Sent" << std::endl;
         }
