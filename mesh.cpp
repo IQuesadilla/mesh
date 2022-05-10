@@ -262,6 +262,7 @@ mesh::message mesh::receiveUDP()
     for (auto &d : devices)
         recvname = (recvaddr.sin_addr.s_addr == d.address) ? d.name : "";
 
+    std::cout << "Recieved from " << recvname << std::endl;
     return {recvname,outdata};
 }
 
