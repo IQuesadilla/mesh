@@ -227,7 +227,7 @@ mesh::message mesh::receiveUDP()
     //free(recvdata);
 
     tinyxml2::XMLDocument doc;
-    doc.Parse((const char*)recvbuff->data(),recvbuff->size());
+    doc.Parse((const char*)recvbuff->data());//,recvbuff->size());
     if (doc.Error() == true)
     {
         doc.PrintError();
