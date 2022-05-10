@@ -44,12 +44,16 @@ int main (int argc, char **argv)
         }
         else if (buffer == "send")
         {
+            std::cout << "Enter name and data" << std::endl;
             std::string datastring;
             std::cin >> buffer >> datastring;
+            std::cout << "Preparing to send" << std::endl;
             std::shared_ptr<std::vector<uint8_t> > databuff;
             databuff.reset(new std::vector<uint8_t>(datastring.begin(),datastring.end()));
             databuff->push_back('\0');
+            std::cout << "Sending" << std::endl;
             temp->sendUDP({buffer,databuff});
+            std::cout << "Sent" << std::endl;
         }
         else if (buffer == "recv")
         {
