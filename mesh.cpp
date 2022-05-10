@@ -187,7 +187,7 @@ int mesh::sendUDP(mesh::message value)
     //value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
     std::cout << "Sending XML data, " << printer.CStrSize() << " bytes" << std::endl;
     int count = sendto (udpsock, printer.CStr(), printer.CStrSize(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
-    std::cout << "Sent " << count << " bytes" << std::endl;
+    std::cout << "Sent " << count << " bytes of [" << printer.CStr() << "]" << std::endl;
     return count;
 }
 
