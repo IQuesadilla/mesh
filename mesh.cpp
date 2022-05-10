@@ -251,10 +251,12 @@ mesh::message mesh::receiveUDP()
     
     //std::cout << recvbuff->size() << " " << std::flush;
 */
+    std::cout << "Creating vector of data " << printer.CStr() << std::endl;
     std::shared_ptr<std::vector<uint8_t> > outdata;
-    outdata.reset();
-    outdata->resize(printer.CStrSize()+1);
-    std::copy(printer.CStr(),printer.CStr()+printer.CStrSize(),outdata->data());
+    outdata.reset(new std::vector<uint8_t>(printer.CStr(),printer.CStr()+printer.CStrSize()));
+    std::cout << "Created vector" << std::endl;
+    //outdata->resize(printer.CStrSize()+1);
+    //std::copy(printer.CStr(),printer.CStr()+printer.CStrSize(),outdata->data());
 
 
     for (auto &d : devices)
