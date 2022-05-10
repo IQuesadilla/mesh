@@ -217,7 +217,7 @@ mesh::message mesh::receiveUDP()
     auto i = namebuffer.begin();
     for(; !std::equal(prefix.begin(),prefix.end(),i); std::advance(i,1));
 */
-    int tempcount = recv (udpsock, recvbuff->data(), BUFFLEN, 0);
+    int tempcount = recvfrom (udpsock, recvbuff->data(), BUFFLEN, 0, (struct sockaddr *) &recvaddr, &recvaddrlen);
     /*while (tempcount == -1 || tempcount == 0)
     {
         int tempsize = recvbuff->size();
