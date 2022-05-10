@@ -226,7 +226,7 @@ mesh::message mesh::receiveUDP()
     }
     //free(recvdata);*/
 
-    std::cout << "Bytes received: " << tempcount << std::endl;
+    std::cout << "Bytes received: " << tempcount << " of [" << recvbuff->data() << "]" << std::endl;
 
     tinyxml2::XMLDocument doc;
     doc.Parse((const char*)recvbuff->data(),tempcount);//,recvbuff->size());
