@@ -195,7 +195,7 @@ mesh::message mesh::receiveUDP()
 {
     std::string recvname;
     std::shared_ptr<std::vector<uint8_t> > recvbuff;
-    recvbuff.reset(new std::vector<uint8_t>());
+    recvbuff.reset(new std::vector<uint8_t>(BUFFLEN));
     sockaddr_in recvaddr;
     socklen_t recvaddrlen = sizeof(recvaddr);
 /*
@@ -218,16 +218,18 @@ mesh::message mesh::receiveUDP()
     for(; !std::equal(prefix.begin(),prefix.end(),i); std::advance(i,1));
 */
     int tempcount = recv (udpsock, recvbuff->data(), BUFFLEN, 0);
-    while (tempcount == -1 || tempcount == 0)
+    /*while (tempcount == -1 || tempcount == 0)
     {
         int tempsize = recvbuff->size();
         recvbuff->resize(recvbuff->size() + BUFFLEN);
         tempcount = recv (udpsock, recvbuff->data() + tempsize, BUFFLEN, MSG_DONTWAIT);
     }
-    //free(recvdata);
+    //free(recvdata);*/
+
+    std::cout << "Bytes received: " << tempcount << std::endl;
 
     tinyxml2::XMLDocument doc;
-    doc.Parse((const char*)recvbuff->data());//,recvbuff->size());
+    doc.Parse((const char*)recvbuff->data(),tempcount);//,recvbuff->size());
     if (doc.Error() == true)
     {
         doc.PrintError();
