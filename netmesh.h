@@ -13,6 +13,7 @@
 #include <chrono>
 #include <sstream>
 #include <map>
+#include <memory>
 #include "tinyxml2/tinyxml2.h"
 
 #define BCADDR "192.168.123.255"
@@ -34,11 +35,11 @@
 #define ASAMPLES 64
 #define POLLCOUNT UPDATETIME / POLLDELAY
 
-class mesh
+class netmesh
 {
 public:
-    mesh();
-    ~mesh() {}
+    netmesh();
+    ~netmesh() {}
 
     struct message
     {
@@ -82,7 +83,7 @@ private:
 
     int broadcastAlive();
     int checkforconn();
-    static void updateThread(mesh *mymesh);
+    static void updateThread(netmesh *mynetmesh);
 
     struct device
     {

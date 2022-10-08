@@ -11,9 +11,9 @@ int disconnect()
     success : return 0
     failure : return errno
 
-vector<char> getFile(string)
+vector<uint8> getFile(string)
     success : return vector of binary data
-            : if file empty, return vector of one char '~'
+            : if file empty, return vector of one uint8 '~'
     failure : return empty vector (size = 0)
     arg1    : name of file
 
@@ -47,9 +47,9 @@ vector<string> getFileListFrom(string)
     failure : return empty vector (size = 0)
     arg1    : name of device to request from
 
-vector<char> getFileData(string,string)
+vector<uint8> getFileData(string,string)
     success : return vector of binary data
-            : if file empty, return vector of one char '~'
+            : if file empty, return vector of one uint8 '~'
     failure : return empty vector (size = 0)
     arg1    : name of device to request from
     arg2    : name of file to request
@@ -59,15 +59,21 @@ int putFileList(string)
     failure : return errno
     arg1    : name of device to send to
 
-int putFileData(string,vector<char>)
+int putFileData(string,vector<uint8>)
     return  : errno or 0 for success
     arg1    : name of device to send to
     arg2    : vector of binary data of file
 
-int updateLocalFiles(string,vector<char>)
+int updateLocalFile(string,vector<uint8>)
     success : return 0
             : reset local file with data
     failure : return errno
     arg1    : name of file to reset
     arg2    : data to reset to
+
+int resetLocalFiles(map<string,vector<uint8> >)
+    success : return 0
+            : reset all local files
+    failure : return errno
+    arg1    : files to reset local files with
 ```

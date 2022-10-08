@@ -1,12 +1,12 @@
 #include "netmesh.h"
 
-mesh::mesh()
+netmesh::netmesh()
 {
     setBroadcastAlive(true);
     setEnableUpdateThread(true);
 }
 
-int mesh::initserver(std::string name)
+int netmesh::initserver(std::string name)
 {
     if (connected == true)
         return 0;
@@ -23,21 +23,21 @@ int mesh::initserver(std::string name)
     return 0;
 }
 
-int mesh::killserver()
+int netmesh::killserver()
 {
     connected = false;
     if (getEnableUpdateThread()) myUpdateThread.join();
     return 0;
 }
 
-int mesh::initUpdateThread()
+int netmesh::initUpdateThread()
 {
     myUpdateThread = std::thread(updateThread,this);
     setEnableUpdateThread(true);
     return 0;
 }
 
-int mesh::initBroadcastSocket()
+int netmesh::initBroadcastSocket()
 {
     connected = false;
     if ((bcsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -62,7 +62,7 @@ int mesh::initBroadcastSocket()
     return 0;
 }
 
-int mesh::initListenSocket()
+int netmesh::initListenSocket()
 {
     if ((listensock = socket(AF_INET,SOCK_STREAM,0)) < 0)
         return errno;
@@ -85,7 +85,7 @@ int mesh::initListenSocket()
     return 0;
 }
 
-int mesh::initUDPSocket()
+int netmesh::initUDPSocket()
 {
     if ((udpsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         return errno;
@@ -108,7 +108,7 @@ int mesh::initUDPSocket()
 }
 
 /*
-std::string mesh::returnErrorMessage(ERRCODES err)
+std::string netmesh::returnErrorMessage(ERRCODES err)
 {
     switch (err)
     {
@@ -116,11 +116,11 @@ std::string mesh::returnErrorMessage(ERRCODES err)
         case SOCKET:        return "Error Creating Socket"; break;
         case SETSOCKOPT:    return "Error Setting the Socket Option"; break;
         case BIND:          return "Error Binding the Socket"; break;
-        default:            return "Not a Mesh Defined Error Code"; break;
+        default:            return "Not a netmesh Defined Error Code"; break;
     }
 }
 */
-int mesh::sendTCP(mesh::message value)
+int netmesh::sendTCP(netmesh::message value)
 {
     int sendsock = -1;
     for (auto &x : connections)
@@ -136,7 +136,7 @@ int mesh::sendTCP(mesh::message value)
     return 0;
 }
 
-mesh::message mesh::recieveTCP(std::string name)
+netmesh::message netmesh::recieveTCP(std::string name)
 {
     int recvsock = -1;
     for (auto &x : connections)
@@ -158,7 +158,7 @@ mesh::message mesh::recieveTCP(std::string name)
     return {name,recvbuff};
 }
 
-int mesh::sendUDP(mesh::message value)
+int netmesh::sendUDP(netmesh::message value)
 {
     in_addr_t sendaddr = -1;
     for (auto &x : devices)
@@ -191,7 +191,7 @@ int mesh::sendUDP(mesh::message value)
     return count;
 }
 
-mesh::message mesh::receiveUDP()
+netmesh::message netmesh::receiveUDP()
 {
     std::string recvname;
     std::shared_ptr<std::vector<uint8_t> > recvbuff;
@@ -268,15 +268,15 @@ mesh::message mesh::receiveUDP()
     return {recvname,outdata};
 }
 
-mesh::message mesh::receiveUDP(std::string from)
+netmesh::message netmesh::receiveUDP(std::string from)
 {
-    mesh::message buff = receiveUDP();
+    netmesh::message buff = receiveUDP();
     if (buff.name == from)
         return buff;
     else return {std::string(),NULL};
 }
 
-std::string mesh::returnDevices()
+std::string netmesh::returnDevices()
 {
     std::stringstream ss;
 
@@ -289,7 +289,7 @@ std::string mesh::returnDevices()
     return ss.str();
 }
 
-int mesh::broadcastAlive()
+int netmesh::broadcastAlive()
 {
     std::string message = "++<"+myName;
     int count = sendto (bcsock, message.c_str(), message.length()+1, MSG_CONFIRM, (const struct sockaddr *) &bcaddr, sizeof(bcaddr));
@@ -298,7 +298,7 @@ int mesh::broadcastAlive()
     return 0;
 }
 
-int mesh::updateDeviceList()
+int netmesh::updateDeviceList()
 {
     char *recvbuff = (char*)malloc(BUFFLEN),
          *namebuff = (char*)malloc(BUFFLEN),
@@ -346,7 +346,7 @@ int mesh::updateDeviceList()
     return 0;
 }
 
-int mesh::checkforconn()
+int netmesh::checkforconn()
 {
     if (listen(listensock,10) > -1)
     {
@@ -364,19 +364,19 @@ int mesh::checkforconn()
     return 0;
 }
 
-void mesh::updateThread(mesh *mymesh)
+void netmesh::updateThread(netmesh *mynetmesh)
 {
-    while (mymesh->isConnected())
+    while (mynetmesh->isConnected())
     {
         for (int i = 0; i < POLLCOUNT; ++i)
         {
-            mymesh->updateDeviceList();
-            //mymesh->receiveUDP();
-            //mymesh->checkforconn();
+            mynetmesh->updateDeviceList();
+            //mynetmesh->receiveUDP();
+            //mynetmesh->checkforconn();
             std::this_thread::sleep_for(std::chrono::milliseconds(POLLDELAY));
         }
 
-        if (mymesh->getBroadcastAlive()) mymesh->broadcastAlive();
+        if (mynetmesh->getBroadcastAlive()) mynetmesh->broadcastAlive();
         //std::cout << returnDevices();
     }
 }
