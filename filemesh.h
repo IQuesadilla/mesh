@@ -10,7 +10,7 @@ public:
     filemesh();
     ~filemesh();
 
-    int connect();
+    int connect(std::string name);
     int disconnect();
 
     std::vector<uint8_t> getFile(std::string path);
@@ -30,6 +30,10 @@ private:
 
     int updateLocalFile(std::string path, std::vector<uint8_t> data);
     int resetLocalFiles(std::map<std::string,std::vector<uint8_t> > files);
+
+    std::map<std::string,std::vector<uint8_t> > localfiles;
+    std::map<std::string,std::vector<std::string> > filecache;
+    std::shared_ptr<netmesh> _netmesh;
 };
 
 #endif

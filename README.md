@@ -38,12 +38,13 @@ int removeFile(string)
 ```
 map<string,vector<string> > getFileLists()
     success : return map with device name as key and vector of file names as data
-            : update internal cache file lists
+            : remove any old file cache
     failure : return empty map (size = 0)
 
 vector<string> getFileListFrom(string)
     success : vector of file names
             : if empty, return vector of one string "~"
+            : update internal file cache
     failure : return empty vector (size = 0)
     arg1    : name of device to request from
 

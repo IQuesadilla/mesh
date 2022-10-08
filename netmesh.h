@@ -1,3 +1,7 @@
+#ifndef NETMESH_H
+#define NETMESH_H
+#pragma once
+
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -112,3 +116,5 @@ private:
     //std::map<std::string,int> receivebuffer;
     std::thread myUpdateThread;
 };
+
+#endif
