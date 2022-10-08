@@ -2,6 +2,7 @@
 
 ## Public Commands
 
+```
 int connect()
     success : return 0
     failure : return errno
@@ -30,10 +31,11 @@ int removeFile(string)
     success : return 0
             : update internal list of local files
     failure : return errno
-
+```
 
 ## Private Commands
 
+```
 map<string,vector<string> > getFileLists()
     success : return map with device name as key and vector of file names as data
             : update internal cache file lists
@@ -68,3 +70,4 @@ int updateLocalFiles(string,vector<char>)
     failure : return errno
     arg1    : name of file to reset
     arg2    : data to reset to
+```
