@@ -36,31 +36,31 @@ int removeFile(string)
 ## Private Commands
 
 ```
-map<string,vector<string> > getFileLists()
+map<string,vector<string> > getNetFileLists()
     success : return map with device name as key and vector of file names as data
             : remove any old file cache
     failure : return empty map (size = 0)
 
-vector<string> getFileListFrom(string)
+vector<string> getNetFileListFrom(string)
     success : vector of file names
             : if empty, return vector of one string "~"
             : update internal file cache
     failure : return empty vector (size = 0)
     arg1    : name of device to request from
 
-vector<uint8> getFileData(string,string)
+vector<uint8> getNetFileData(string,string)
     success : return vector of binary data
             : if file empty, return vector of one uint8 '~'
     failure : return empty vector (size = 0)
     arg1    : name of device to request from
     arg2    : name of file to request
 
-int putFileList(string)
+int putNetFileList(string)
     success : return 0
     failure : return errno
     arg1    : name of device to send to
 
-int putFileData(string,vector<uint8>)
+int putNetFileData(string,vector<uint8>)
     return  : errno or 0 for success
     arg1    : name of device to send to
     arg2    : vector of binary data of file

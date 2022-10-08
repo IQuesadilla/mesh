@@ -27,11 +27,18 @@ std::vector<uint8_t> filemesh::getFile(std::string path)
         return localit->second;
 
     std::string name;
-    auto netfiles = getFileLists();
+    auto netfiles = getNetFileLists();
     for (auto &x : netfiles)
         for (auto &y : x.second)
             if (y == path)
-                return getFileData (x.first, path);
+                return getNetFileData (x.first, path);
 
     return *new std::vector<uint8_t>();
+}
+
+std::vector<std::string> filemesh::getFileList()
+{
+    std::vector<std::string> list;
+    for (auto &x : localfiles)
+
 }

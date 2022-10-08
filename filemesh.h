@@ -20,13 +20,13 @@ public:
     int removeFile(std::string path);
 
 private:
-    std::map<std::string,std::vector<std::string> > getFileLists();
+    std::map<std::string,std::vector<std::string> > getNetFileLists();
 
-    std::vector<std::string> getFileListFrom(std::string name);
-    int putFileList(std::string name);
+    std::vector<std::string> getNetFileListFrom(std::string name);
+    int putNetFileList(std::string name);
 
-    std::vector<uint8_t> getFileData(std::string name, std::string path);
-    int putFileData(std::string name, std::vector<uint8_t> data);
+    std::vector<uint8_t> getNetFileData(std::string name, std::string path);
+    int putNetFileData(std::string name, std::vector<uint8_t> data);
 
     int updateLocalFile(std::string path, std::vector<uint8_t> data);
     int resetLocalFiles(std::map<std::string,std::vector<uint8_t> > files);
