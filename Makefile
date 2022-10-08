@@ -16,7 +16,7 @@ interactive: interactive.cpp libmesh.so install
 	$(CXX) -o $@ $< $(LIBS)
 
 install: $(TARGET)
-	cp $(TARGET) /usr/lib 
+	cp $(TARGET) /usr/local/lib 
 
 clean:
 	-rm *.o
