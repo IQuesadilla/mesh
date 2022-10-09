@@ -16,8 +16,9 @@ public:
     std::vector<uint8_t> getFile(std::string path);
     std::vector<std::string> getFileList();
 
-    int createFile(std::string path);
+    int createFile(std::string path, std::vector<uint8_t> data);
     int removeFile(std::string path);
+    int updateFile(std::string path, std::vector<uint8_t> data);
 
 private:
     std::map<std::string,std::vector<std::string> > getNetFileLists();

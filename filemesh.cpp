@@ -40,5 +40,43 @@ std::vector<std::string> filemesh::getFileList()
 {
     std::vector<std::string> list;
     for (auto &x : localfiles)
+        list.push_back(x.first);
 
+    for (auto &x : getNetFileLists())
+        std::copy(x.second.begin(),x.second.end(),back_inserter(list));
+
+    if (list.empty())
+        return std::vector<std::string>{"~"};
+    return list;
+}
+
+int filemesh::createFile(std::string path, std::vector<uint8_t> data)
+{
+    auto localit = localfiles.find(path);
+    if (localit == localfiles.end())
+        return EEXIST;
+
+    localfiles.insert(std::pair(path,data));
+
+    auto localit = localfiles.find(path);
+    if (localit == localfiles.end())
+        return ENOSPC;
+}
+
+int filemesh::removeFile(std::string path)
+{
+    auto localit = localfiles.find(path);
+    if (localit == localfiles.end())
+        return ENOENT;
+    localfiles.erase(localit);
+    return EXIT_SUCCESS;
+}
+
+int filemesh::updateFile(std::string path, std::vector<uint8_t> data)
+{
+    auto localit = localfiles.find(path);
+    if (localit == localfiles.end())
+        return ENOENT;
+    localfiles[path] = data;
+    return EXIT_SUCCESS;
 }
