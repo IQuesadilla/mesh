@@ -45,12 +45,6 @@ public:
     netmesh();
     ~netmesh() {}
 
-    struct message
-    {
-        std::string name;
-        std::shared_ptr<std::vector<uint8_t> > data;
-    };
-
     std::mutex dumbshitsafety;
     std::vector<uint8_t> dumbshit;
     int cocksafety = 0;
@@ -67,12 +61,12 @@ public:
     //std::string returnErrorMessage(ERRCODES err);
 
     int conntodevice(std::string devname);
-    int sendTCP(message value);
-    message recieveTCP(std::string name);
+    //int sendTCP(tinyxml2::XMLNode *value, std::string name);
+    //tinyxml2::XMLNode *recieveTCP(tinyxml2::XMLDocument *value, std::string name);
 
-    int sendUDP(message value);
-    message receiveUDP();
-    message receiveUDP(std::string from);
+    int sendUDP(tinyxml2::XMLNode *value);
+    int receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data);
+    //tinyxml2::XMLNode *receiveUDP(tinyxml2::XMLDocument *target, std::string from);
 
     std::string returnDevices();
     int updateDeviceList();

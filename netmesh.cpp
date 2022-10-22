@@ -119,12 +119,12 @@ std::string netmesh::returnErrorMessage(ERRCODES err)
         default:            return "Not a netmesh Defined Error Code"; break;
     }
 }
-*/
-int netmesh::sendTCP(netmesh::message value)
+*//*
+int netmesh::sendTCP(tinyxml2::XMLNode *value, std::string name)
 {
     int sendsock = -1;
     for (auto &x : connections)
-        sendsock = (x.devname == value.name) ? x.connsock : sendsock;
+        sendsock = (x.devname == name) ? x.connsock : sendsock;
     if (sendsock == -1)
         return 1;
 
@@ -157,12 +157,46 @@ netmesh::message netmesh::recieveTCP(std::string name)
 
     return {name,recvbuff};
 }
-
-int netmesh::sendUDP(netmesh::message value)
+*/
+int netmesh::sendUDP(tinyxml2::XMLNode *value)
 {
+    // Verify that the input node name is "msg" according to spec
+    if (value->Value() != "msg")
+        return -1;
+
+    // Clone the node into a new document
+    tinyxml2::XMLDocument doc;
+    tinyxml2::XMLNode *recvnode = value->DeepClone(&doc);
+    doc.InsertFirstChild(recvnode);
+
+    // Get the name of the device to send to
+    char * namebuff;
+    doc.FirstChildElement("msg")->QueryStringAttribute("name",&namebuff);
+    std::string name = namebuff;
+
+    tinyxml2::XMLElement *dataElement = nullptr;
+    dataElement = doc.FirstChildElement("msg")->FirstChildElement("data");
+
+    tinyxml2::XMLPrinter dataElementPrinter;
+    for (auto it = dataElement->FirstChild(); it != nullptr; it = it->NextSibling())
+        it->Accept(&dataElementPrinter);
+
+    if (dataElementPrinter.CStrSize() == 0)
+        return -1;
+
     in_addr_t sendaddr = -1;
     for (auto &x : devices)
-        sendaddr = (x.name == value.name) ? x.address : sendaddr;
+        sendaddr = (x.name == name) ? x.address : sendaddr;
+    if (sendaddr == -1)
+        return -1;
+
+    sockaddr_in udpaddr;
+    memset (&udpaddr,'\0',sizeof(udpaddr));
+    udpaddr.sin_family = AF_INET;
+    udpaddr.sin_addr.s_addr = sendaddr;
+    udpaddr.sin_port = htons(UDPPORT);    in_addr_t sendaddr = -1;
+    for (auto &x : devices)
+        sendaddr = (x.name == name) ? x.address : sendaddr;
     if (sendaddr == -1)
         return -1;
 
@@ -171,78 +205,62 @@ int netmesh::sendUDP(netmesh::message value)
     udpaddr.sin_family = AF_INET;
     udpaddr.sin_addr.s_addr = sendaddr;
     udpaddr.sin_port = htons(UDPPORT);
-
-    std::cout << "Created XML from data" << std::endl;
-    tinyxml2::XMLDocument doc;
-    tinyxml2::XMLNode *root = doc.NewElement("root");
-    doc.InsertFirstChild(root);
-    std::cout << "Created element, " << doc.FirstChildElement("root")->Name() << " = [" << value.data->data() << "]" << std::endl;
-    doc.FirstChildElement("root")->SetValue((const char*)value.data->data());
-
-    std::cout << "Printing XML" << std::endl;
-    tinyxml2::XMLPrinter printer;
-    doc.Print(&printer);
-
-    //std::vector<uint8_t> prefix {'-','-','<'};
-    //value.data->insert(value.data->begin(),prefix.begin(),prefix.end());
-    std::cout << "Sending XML data, " << printer.CStrSize() << " bytes" << std::endl;
-    int count = sendto (udpsock, printer.CStr(), printer.CStrSize(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
-    std::cout << "Sent " << count << " bytes of [" << printer.CStr() << "]" << std::endl;
+     
+    std::cout << "Sending XML data, " << dataElementPrinter.CStrSize() << " bytes" << std::endl;
+    int count = sendto (udpsock, dataElementPrinter.CStr(), dataElementPrinter.CStrSize(),0,(const struct sockaddr *)&udpaddr,sizeof(udpaddr));
+    std::cout << "Sent " << count << " bytes of [" << dataElementPrinter.CStr() << "]" << std::endl;
     return count;
 }
 
-netmesh::message netmesh::receiveUDP()
+int netmesh::receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data)
 {
     std::string recvname;
     std::shared_ptr<std::vector<uint8_t> > recvbuff;
     recvbuff.reset(new std::vector<uint8_t>(BUFFLEN));
     sockaddr_in recvaddr;
     socklen_t recvaddrlen = sizeof(recvaddr);
-/*
-    // GET NAME, IGNORE IF WRONG
-    std::vector<uint8_t> namebuffer (MAXNAMELEN + 6);
-    int namecount = recvfrom (udpsock, namebuffer.data(), MAXNAMELEN + 6, MSG_PEEK, (struct sockaddr *) &recvaddr, &recvaddrlen);
 
-    std::vector<uint8_t> prefix {'-','-','<'};
-    std::vector<uint8_t> postfix {'>','-','-'};
-
-    if (!std::equal(prefix.begin(),prefix.end(),namebuffer.begin()))
-        return {std::string(),NULL};
-    
-    if(!std::equal(myName.begin(),myName.end(),namebuffer.begin() + 3))
-    {
-        return receiveUDP();
-    }
-
-    auto i = namebuffer.begin();
-    for(; !std::equal(prefix.begin(),prefix.end(),i); std::advance(i,1));
-*/
+    int totalcount = 0;
     int tempcount = recvfrom (udpsock, recvbuff->data(), BUFFLEN, 0, (struct sockaddr *) &recvaddr, &recvaddrlen);
-    /*while (tempcount == -1 || tempcount == 0)
+    while (tempcount == -1 || tempcount == 0)
     {
         int tempsize = recvbuff->size();
         recvbuff->resize(recvbuff->size() + BUFFLEN);
         tempcount = recv (udpsock, recvbuff->data() + tempsize, BUFFLEN, MSG_DONTWAIT);
+        totalcount += tempcount;
     }
-    //free(recvdata);*/
 
     std::cout << "Bytes received: " << tempcount << " of [" << recvbuff->data() << "] "  << strlen((const char*)recvbuff->data()) << std::endl;
 
+    *data = target->NewElement("msg");
+    tinyxml2::XMLNode *datanode = target->NewElement("data");
+    tinyxml2::XMLNode *timenode = target->NewElement("time");
+    (*data)->InsertFirstChild(datanode);
+    (*data)->InsertAfterChild(datanode, timenode);
+
     tinyxml2::XMLDocument doc;
-    doc.Parse((const char*)recvbuff->data(),tempcount);//,recvbuff->size());
-    if (doc.Error() == true)
+    auto parseerror = doc.Parse((const char*)recvbuff->data(),tempcount);
+    if (parseerror == tinyxml2::XML_SUCCESS)
     {
-        doc.PrintError();
-        return {std::string(),NULL};
+        std::cout << "Successfully parsed" << std::endl;
+        *data = doc.FirstChild()->FirstChild()->DeepClone(target);
     }
+    else if (parseerror == tinyxml2::XML_ERROR_PARSING)
+    {
+        tinyxml2::XMLNode *datanode = doc.NewElement("data");
+    }
+    //if (doc.Error() == true)
+    //{
+    //    doc.PrintError();
+    //    return -1;
+    //.}
 
-    std::cout << "Successfully parsed" << std::endl;
-
+/*
     //tinyxml2::XMLPrinter printer;
     //doc.Print(&printer);
-    std::string printer = doc.FirstChildElement()->Value();
+    std::string printer = doc->FirstChildElement()->Value();
 
-    std::cout << "Ready to print" << std::endl;
+    std::cout << "Ready to print" << std::endl;*/
 /*
     //std::vector<uint8_t> prefix {'-','-','<'};
     if (!std::equal(prefix.begin(),prefix.end(),recvbuff->begin()))
@@ -251,7 +269,7 @@ netmesh::message netmesh::receiveUDP()
         recvbuff->erase(recvbuff->begin(),recvbuff->begin()+3);
     
     //std::cout << recvbuff->size() << " " << std::flush;
-*/
+*//*
     std::cout << "Creating vector of data " << printer << std::endl;
     std::shared_ptr<std::vector<uint8_t> > outdata;
     outdata.reset(new std::vector<uint8_t>(printer.begin(),printer.end()));
@@ -265,16 +283,16 @@ netmesh::message netmesh::receiveUDP()
         recvname = (recvaddr.sin_addr.s_addr == d.address) ? d.name : "";
 
     std::cout << "Recieved from " << recvname << std::endl;
-    return {recvname,outdata};
+    return {recvname,outdata};*/
 }
-
-netmesh::message netmesh::receiveUDP(std::string from)
+/*
+tinyxml2::XMLNode *netmesh::receiveUDP(tinyxml2::XMLDocument *target, std::string from)
 {
-    netmesh::message buff = receiveUDP();
+    auto buff = receiveUDP(target);
     if (buff.name == from)
         return buff;
-    else return {std::string(),NULL};
-}
+    else nullptr;
+}*/
 
 std::string netmesh::returnDevices()
 {
