@@ -170,7 +170,7 @@ int netmesh::sendUDP(tinyxml2::XMLNode *value)
     doc.InsertFirstChild(recvnode);
 
     // Get the name of the device to send to
-    char * namebuff;
+    char *namebuff;
     doc.FirstChildElement("msg")->QueryStringAttribute("name",&namebuff);
     std::string name = namebuff;
 
@@ -226,7 +226,7 @@ int netmesh::receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data)
     {
         int tempsize = recvbuff->size();
         recvbuff->resize(recvbuff->size() + BUFFLEN);
-        tempcount = recv (udpsock, recvbuff->data() + tempsize, BUFFLEN, MSG_DONTWAIT);
+        tempcount = recv (udpsock, &recvbuff->data()[tempsize], BUFFLEN, MSG_DONTWAIT);
         totalcount += tempcount;
     }
 
@@ -243,11 +243,18 @@ int netmesh::receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data)
     if (parseerror == tinyxml2::XML_SUCCESS)
     {
         std::cout << "Successfully parsed" << std::endl;
-        *data = doc.FirstChild()->FirstChild()->DeepClone(target);
+        for (auto it = doc.FirstChild(); it != nullptr; it = it->NextSibling())
+        {
+            tinyxml2::XMLNode *tempdata = it->DeepClone(target);
+            if ((*data)->LastChild() != NULL)
+                (*data)->InsertAfterChild((*data)->LastChild(),tempdata);
+            else
+                (*data)->InsertFirstChild(tempdata);
+        }
     }
     else if (parseerror == tinyxml2::XML_ERROR_PARSING)
     {
-        tinyxml2::XMLNode *datanode = doc.NewElement("data");
+        datanode->ToElement()->SetText(recvbuff->data());
     }
     //if (doc.Error() == true)
     //{

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "netmesh.h"
+#include "meshfs.h"
 
 // testing
 
@@ -37,6 +38,10 @@ private:
     std::map<std::string,std::vector<uint8_t> > localfiles;
     std::map<std::string,std::vector<std::string> > filecache;
     std::shared_ptr<netmesh> _netmesh;
+
+    static void helper_func(std::shared_ptr<filemesh> fm);
+
+    std::unique_ptr<std::thread> helper_thread; 
 };
 
 #endif

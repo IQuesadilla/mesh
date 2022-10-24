@@ -3,6 +3,8 @@
 filemesh::filemesh()
 {
     _netmesh.reset(new netmesh());
+
+    helper_thread.reset(new std::thread(helper_func,this));
 }
 
 filemesh::~filemesh()
