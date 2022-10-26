@@ -7,7 +7,8 @@ template class meshfs<void*>;
 template <class DEVID>
 meshfs<DEVID>::meshfs()
 {
-    //
+    if(!exists)
+        initfs("");
 }
 
 template <class DEVID>
