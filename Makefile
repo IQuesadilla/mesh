@@ -1,19 +1,31 @@
 CXX = g++
 CFLAGS = -o $@ -c $< -std=c++17 -fPIC 
 TARGET = libfilemesh.so
-TESTS = interactive
-LIBS = -L. -lmesh -lpthread
+TESTS = meshfs_test1
+LIBDIR = ./lib/
+LIBS = -L$(LIBDIR) -lpthread
 
 all: $(TARGET)
 
-libfilemesh.so: filemesh.o netmesh.o
-	$(CXX) -o $@ $^ -shared
+tests: $(TESTS)
+
+meshfs_test1: tests/meshfs/test1.cpp meshfs.o
+	$(CXX) -o ./tests/bin/$@ $^ -std=c++17
+
+libfilemesh.so: filemesh.o netmesh.o meshfs.o
+	$(CXX) -o $(LIBDIR)/$@ $^ -shared
 
 filemesh.o: filemesh.cpp filemesh.h
 	$(CXX) $(CFLAGS)
 
+libmeshfs.so: meshfs.o
+	$(CXX) -o $(LIBDIR)/$@ $< -shared
+
+meshfs.o: meshfs.cpp meshfs.h
+	$(CXX) $(CFLAGS)
+
 libnetmesh.so: netmesh.o
-	$(CXX) -o $@ $< -shared
+	$(CXX) -o $(LIBDIR)/$@ $< -shared
 
 netmesh.o: netmesh.cpp netmesh.h tinyxml2/libtinyxml2.a
 	$(CXX) $(CFLAGS)
@@ -26,5 +38,6 @@ install: $(TARGET)
 
 clean:
 	-rm *.o
+	-rm tests/bin/*
+	-rm $(LIBDIR)/*
 	-rm $(TARGET)
-	-rm $(TESTS)

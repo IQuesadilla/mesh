@@ -4,6 +4,7 @@
 
 #include "netmesh.h"
 #include "meshfs.h"
+#include "meshfs_fuse.h"
 
 // testing
 

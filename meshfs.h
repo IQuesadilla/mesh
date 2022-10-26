@@ -5,32 +5,32 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sys/stat.h>
 #include <bits/struct_stat.h>
 #include <memory>
 #include <thread>
 
-#define DEFAULT_CONFIG_PATH "./config.xml"
+#define DEFAULT_CONFIG_PATH "./config.xml";
+typedef unsigned int BLKID;
+enum OPEN_FLAGS {
+    READ,
+    WRITE
+};
+
+enum FILE_TYPES {
+    NORMAL,
+    DIRECTORY,
+    FIFO
+};
 
 template <class DEVID>
 class meshfs
 {
 public:
-    typedef unsigned int BLKID;
-    enum OPEN_FLAGS {
-        READ,
-        WRITE
-    };
-
-    enum FILE_TYPES {
-        NORMAL,
-        DIRECTORY,
-        FIFO
-    };
-
     meshfs();
     ~meshfs();
 
-    int initfs(std::string config = DEFAULT_CONFIG_PATH);
+    int initfs(std::string config);
     int killfs();
 
     int importfs(std::string importpath);
@@ -45,11 +45,15 @@ public:
     int link  (std::string path, std::string oldfile);
     int unlink(std::string path);
 
-    int stat(std::string path, stat *info);
+    int stat(std::string path, struct stat *info);
 
-    int hasblks(std::vector<BLKID> req, std::map<DEVID, std::vector<BLKID,size_t> > whohas);
-    int getblks(std::vector<BLKID> req, std::map<BLKID,std::vector<uint8_t*> > *blks);
-    int updateonline(std::map<DEVID, std::vector<BLKID,size_t> > blks);
+    int reqblks   (std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks);
+    int (*getblks)(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks, void *userptr);
+    int updatecache  (std::pair<DEVID, std::vector<BLKID, size_t> > *blks);
+    int (*updatemesh)(std::pair<DEVID, std::vector<BLKID, size_t> > *blks, void *userptr);
+
+    void setuserptr(void *ptr) {userptr = ptr;}
+    void *getuserptr(){return userptr;}
 
 private:
     typedef unsigned int Inode;
@@ -66,6 +70,7 @@ private:
     } fs_meta;
 
     bool exists = false;
+    void *userptr;
 
     std::map<std::string,Inode> open_files;
     std::map<Inode,file_meta> dict; 

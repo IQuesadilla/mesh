@@ -30,13 +30,13 @@ namespace mfs_fuse
     int chown(const char *path, uid_t uid, gid_t gid);
     int truncate(const char *path, off_t newsize);
     int utime(const char *path, struct utimbuf *ubuf);
-    int open(const char *path, struct fuse_file_info *fi);
-    int read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
-    int write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+    int open(const char *path, fuse_file_info *fi);
+    int read(const char *path, char *buf, size_t size, off_t offset, fuse_file_info *fi);
+    int write(const char *path, const char *buf, size_t size, off_t offset, fuse_file_info *fi);
     int statfs(const char *path, struct statvfs *statv);
-    int flush(const char *path, struct fuse_file_info *fi);
-    int release(const char *path, struct fuse_file_info *fi);
-    int fsync(const char *path, int datasync, struct fuse_file_info *fi);
+    int flush(const char *path, fuse_file_info *fi);
+    int release(const char *path, fuse_file_info *fi);
+    int fsync(const char *path, int datasync, fuse_file_info *fi);
 
     #ifdef HAVE_SYS_XATTR_H
     int setxattr(const char *path, const char *name, const char *value, size_t size, int flags);
@@ -45,15 +45,15 @@ namespace mfs_fuse
     int removexattr(const char *path, const char *name);
     #endif
 
-    int opendir(const char *path, struct fuse_file_info *fi);
-    int readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
-    int fsyncdir(const char *path, int datasync, struct fuse_file_info *fi);
-    int releasedir(const char *path, struct fuse_file_info *fi);
+    int opendir(const char *path, fuse_file_info *fi);
+    int readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, fuse_file_info *fi);
+    int fsyncdir(const char *path, int datasync, fuse_file_info *fi);
+    int releasedir(const char *path, fuse_file_info *fi);
     void *init(struct fuse_conn_info *conn);
     void destroy(void *userdata);
     int access(const char *path, int mask);
-    int ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
-    int fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi);
+    int ftruncate(const char *path, off_t offset, fuse_file_info *fi);
+    int fgetattr(const char *path, struct stat *statbuf, fuse_file_info *fi);
 
     static fuse_operations mfs_ops = {
         .getattr = mfs_fuse::getattr,
@@ -100,6 +100,13 @@ namespace mfs_fuse
     struct mfs_data
     {
         filemesh *fuse_filemesh;
+    };
+
+    static void mfs_file_info_default(fuse_file_info* fi)
+    {
+        fi->direct_io = true;
+        fi->keep_cache = false;
+        fi->nonseekable = true;
     };
 }
 #endif

@@ -24,7 +24,7 @@ int mfs_fuse::readlink(const char *path, char *link, size_t size)
 
 int mfs_fuse::mknod(const char *path, mode_t mode, dev_t dev)
 {
-
+    // TODO
 }
 
 int mfs_fuse::mkdir(const char *path, mode_t mode)
@@ -34,7 +34,7 @@ int mfs_fuse::mkdir(const char *path, mode_t mode)
 
 int mfs_fuse::unlink(const char *path)
 {
-
+    // TODO
 }
 
 int mfs_fuse::rmdir(const char *path)
@@ -79,22 +79,22 @@ int mfs_fuse::utime(const char *path, struct utimbuf *ubuf)
 
 int mfs_fuse::open(const char *path, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::statfs(const char *path, struct statvfs *statv)
 {
-
+    // TODO
 }
 
 int mfs_fuse::flush(const char *path, struct fuse_file_info *fi)
@@ -104,7 +104,7 @@ int mfs_fuse::flush(const char *path, struct fuse_file_info *fi)
 
 int mfs_fuse::release(const char *path, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::fsync(const char *path, int datasync, struct fuse_file_info *fi)
@@ -136,12 +136,12 @@ int mfs_fuse::removexattr(const char *path, const char *name)
 
 int mfs_fuse::opendir(const char *path, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 int mfs_fuse::fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
@@ -151,7 +151,7 @@ int mfs_fuse::fsyncdir(const char *path, int datasync, struct fuse_file_info *fi
 
 int mfs_fuse::releasedir(const char *path, struct fuse_file_info *fi)
 {
-
+    // TODO
 }
 
 void *mfs_fuse::init(struct fuse_conn_info *conn)
