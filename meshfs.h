@@ -49,8 +49,8 @@ public:
 
     int reqblks   (std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks);
     int (*getblks)(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks, void *userptr);
-    int updatecache  (std::pair<DEVID, std::vector<BLKID, size_t> > *blks);
-    int (*updatemesh)(std::pair<DEVID, std::vector<BLKID, size_t> > *blks, void *userptr);
+    int updatecache  (DEVID id, std::vector<BLKID, size_t> *blks);
+    int (*updatemesh)(DEVID id, std::vector<BLKID, size_t> *blks, void *userptr);
 
     void setuserptr(void *ptr) {userptr = ptr;}
     void *getuserptr(){return userptr;}
@@ -63,10 +63,11 @@ private:
         gid_t gid;
         mode_t mod;
         BLKID blkid;
+        FILE_TYPES type;
     };
 
     struct {
-        int BLKSIZE;
+        int BLKSIZE = 4096;
     } fs_meta;
 
     bool exists = false;

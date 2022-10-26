@@ -8,9 +8,9 @@ int my_getblks(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > 
     return ((meshfs<std::string>*)userptr)->reqblks(req,blks);
 }
 
-int my_updatemesh(std::pair<MYDEVID, std::vector<BLKID, size_t> > *blks, void *userptr)
+int my_updatemesh(MYDEVID id, std::vector<BLKID, size_t> *blks, void *userptr)
 {
-    return ((meshfs<std::string>*)userptr)->updatecache(blks);
+    return ((meshfs<std::string>*)userptr)->updatecache(id, blks);
 }
 
 int main()

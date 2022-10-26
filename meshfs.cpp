@@ -97,7 +97,7 @@ int meshfs<DEVID>::reqblks(std::vector<BLKID> *req, std::map<BLKID, std::vector<
 }
 
 template <class DEVID>
-int meshfs<DEVID>::updatecache(std::pair<DEVID, std::vector<BLKID, size_t> > *blks)
+int meshfs<DEVID>::updatecache(DEVID id, std::vector<BLKID, size_t> *blks)
 {
     return 0;
 }
