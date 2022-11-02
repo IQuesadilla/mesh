@@ -12,6 +12,7 @@
 
 #define DEFAULT_CONFIG_PATH "./config.xml";
 typedef unsigned int BLKID;
+typedef unsigned int Inode;
 enum OPEN_FLAGS {
     READ,
     WRITE
@@ -23,14 +24,26 @@ enum FILE_TYPES {
     FIFO
 };
 
+struct file_meta {
+    std::string path;
+    uid_t uid;
+    gid_t gid;
+    mode_t mod;
+    BLKID blkid;
+    FILE_TYPES type;
+    size_t size;
+    size_t links;
+};
+
 template <class DEVID>
 class meshfs
 {
 public:
-    meshfs();
+    meshfs(DEVID id);
     ~meshfs();
 
-    int initfs(std::string config);
+    //int initfs(std::string config);
+    int initfs(DEVID id);
     int killfs();
 
     int importfs(std::string importpath);
@@ -49,29 +62,27 @@ public:
 
     int reqblks   (std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks);
     int (*getblks)(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks, void *userptr);
-    int updatecache  (DEVID id, std::vector<BLKID, size_t> *blks);
-    int (*updatemesh)(DEVID id, std::vector<BLKID, size_t> *blks, void *userptr);
+    int updatecache  (DEVID id, bool remove, std::map<Inode,file_meta> *thedict, std::map<BLKID, size_t> *blks);
+    int (*updatemesh)(DEVID id, bool remove, std::map<Inode,file_meta> *thedict, std::map<BLKID, size_t> *blks, void *userptr);
 
     void setuserptr(void *ptr) {userptr = ptr;}
     void *getuserptr(){return userptr;}
 
-private:
-    typedef unsigned int Inode;
-    struct file_meta {
-        std::string path;
-        uid_t uid;
-        gid_t gid;
-        mode_t mod;
-        BLKID blkid;
-        FILE_TYPES type;
-    };
+    void setmyid(DEVID id){myid = id;}
+    DEVID getmyid(){return myid;}
 
+private:
     struct {
         int BLKSIZE = 4096;
     } fs_meta;
 
     bool exists = false;
     void *userptr;
+    DEVID myid;
+
+    Inode newinode();
+    BLKID newblkid();
+    Inode inodeatpath(std::string path);
 
     std::map<std::string,Inode> open_files;
     std::map<Inode,file_meta> dict; 

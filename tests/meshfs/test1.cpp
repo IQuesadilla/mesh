@@ -8,9 +8,10 @@ int my_getblks(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > 
     return ((meshfs<MYDEVID>*)userptr)->reqblks(req,blks);
 }
 
-int my_updatemesh(MYDEVID id, std::vector<BLKID, size_t> *blks, void *userptr)
+template <class DEVID>
+int my_updatemesh(DEVID id, bool remove, std::map<Inode,file_meta> *thedict, std::map<BLKID, size_t> *blks, void *userptr)
 {
-    return ((meshfs<MYDEVID>*)userptr)->updatecache(id, blks);
+    return ((meshfs<MYDEVID>*)userptr)->updatecache(id, remove, thedict, blks);
 }
 
 int main()
@@ -18,8 +19,8 @@ int main()
     std::shared_ptr<meshfs<MYDEVID> > mfs1;
     std::shared_ptr<meshfs<MYDEVID> > mfs2;
 
-    mfs1.reset(new meshfs<MYDEVID>());
-    mfs2.reset(new meshfs<MYDEVID>());
+    mfs1.reset(new meshfs<MYDEVID>("mfs1"));
+    mfs2.reset(new meshfs<MYDEVID>("mfs2"));
 
     mfs1->setuserptr(mfs2.get());
     mfs2->setuserptr(mfs1.get());
@@ -41,10 +42,11 @@ int main()
     struct stat statbuf2;
     mfs2->stat("test.txt", &statbuf2);
 
-    char *buffer = (char*)malloc(statbuf2.st_size);
+    char *buffer = (char*)malloc(statbuf2.st_size+1);
     mfs2->open("test.txt", OPEN_FLAGS::READ);
     mfs2->read("test.txt", 0, statbuf2.st_size, (uint8_t*)buffer);
     mfs2->close("test.txt");
+    buffer[statbuf2.st_size] = '\0';
 
     std::cout << "File contents - [" << buffer << "]" << std::endl;
     free(buffer);
