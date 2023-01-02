@@ -1,9 +1,11 @@
 #include "../../meshfs.h"
 #include <thread>
+#include <fstream>
+#include <cstdlib>
 
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 30
 
-#include <fuse/fuse.h>
+#include <fuse3/fuse.h>
 #include <unistd.h>
 #include <iostream>
 #if __has_include (<sys/xattr.h>)
@@ -18,7 +20,7 @@ bool firstname = true;
 
 namespace test_fuse
 {
-    int getattr(const char *path, struct stat *statbuf);
+    int getattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi);
     int readlink(const char *path, char *link, size_t size);
     int mknod(const char *path, mode_t mode, dev_t dev);
     int mkdir(const char *path, mode_t mode);
@@ -47,10 +49,10 @@ namespace test_fuse
     #endif
 
     int opendir(const char *path, fuse_file_info *fi);
-    int readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, fuse_file_info *fi);
+    int readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, fuse_file_info *fi, fuse_readdir_flags flags);
     int fsyncdir(const char *path, int datasync, fuse_file_info *fi);
     int releasedir(const char *path, fuse_file_info *fi);
-    void *init(struct fuse_conn_info *conn);
+    void *init(struct fuse_conn_info *conn, struct fuse_config *cfg);
     void destroy(void *userdata);
     int access(const char *path, int mask);
     int ftruncate(const char *path, off_t offset, fuse_file_info *fi);
@@ -59,7 +61,6 @@ namespace test_fuse
     static fuse_operations mfs_ops = {
         .getattr = test_fuse::getattr,
         .readlink = nullptr,//test_fuse::readlink,
-        .getdir = nullptr, // deprecated
         .mknod = test_fuse::mknod,
         .mkdir = nullptr,//test_fuse::mkdir,
         .unlink = test_fuse::unlink,
@@ -70,7 +71,7 @@ namespace test_fuse
         .chmod = nullptr,//test_fuse::chmod,
         .chown = nullptr,//test_fuse::chown,
         .truncate = nullptr,//test_fuse::truncate,
-        .utime = nullptr,//test_fuse::utime,
+//        .utime = nullptr,//test_fuse::utime,
         .open = test_fuse::open,
         .read = test_fuse::read,
         .write = test_fuse::write,
@@ -94,14 +95,15 @@ namespace test_fuse
         .init = test_fuse::init,
         .destroy = test_fuse::destroy,
         .access = nullptr,//test_fuse::access,
-        .ftruncate = nullptr,//test_fuse::ftruncate,
-        .fgetattr = nullptr,//test_fuse::fgetattr
+        //.ftruncate = nullptr,//test_fuse::ftruncate,
+        //.fgetattr = nullptr,//test_fuse::fgetattr
     };
 
     struct test_data
     {
         std::shared_ptr<meshfs<MYDEVID> > mfs;
         std::string name;
+        std::fstream tlog;
     };
 
     static void mfs_file_info_default(fuse_file_info* fi)
@@ -112,7 +114,7 @@ namespace test_fuse
     };
 }
 
-int test_fuse::getattr(const char *path, struct stat *statbuf)
+int test_fuse::getattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
 {
     statbuf->st_atim = {0};
     statbuf->st_blksize = 64;
@@ -127,148 +129,159 @@ int test_fuse::getattr(const char *path, struct stat *statbuf)
     statbuf->st_rdev = 0;
     statbuf->st_size = 1000;
     statbuf->st_uid = 0;
+    return 0;
 }
 
 int test_fuse::readlink(const char *path, char *link, size_t size)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::mknod(const char *path, mode_t mode, dev_t dev)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::mkdir(const char *path, mode_t mode)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::unlink(const char *path)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::rmdir(const char *path)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::symlink(const char *path, const char *link)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::rename(const char *path, const char *newpath)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::link(const char *path, const char *newpath)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::chmod(const char *path, mode_t mode)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::chown(const char *path, uid_t uid, gid_t gid)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::truncate(const char *path, off_t newsize)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::utime(const char *path, struct utimbuf *ubuf)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::open(const char *path, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::statfs(const char *path, struct statvfs *statv)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::flush(const char *path, struct fuse_file_info *fi)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::release(const char *path, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::fsync(const char *path, int datasync, struct fuse_file_info *fi)
 {
-
+    return ENOTSUP;
 }
 
 #ifdef HAVE_SYS_XATTR_H
 int test_fuse::setxattr(const char *path, const char *name, const char *value, size_t size, int flags)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::getxattr(const char *path, const char *name, char *value, size_t)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::listxattr(const char *path, char *list, size_t size)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::removexattr(const char *path, const char *name)
 {
-
+    return ENOTSUP;
 }
 #endif
 
 int test_fuse::opendir(const char *path, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
-int test_fuse::readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
+int test_fuse::readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, fuse_readdir_flags flags)
 {
     // TODO
+    return ENOTSUP;
 }
 
 int test_fuse::fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::releasedir(const char *path, struct fuse_file_info *fi)
 {
     // TODO
+    return ENOTSUP;
 }
 
-void *test_fuse::init(struct fuse_conn_info *conn)
+void *test_fuse::init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 {
-    std::cout << "Log: (init)" << std::endl;
+    TEST_DATA->tlog << "Log: (init)" << std::endl;
     TEST_DATA->mfs.reset(new meshfs<MYDEVID>(TEST_DATA->name));
 
     return TEST_DATA;
@@ -281,28 +294,17 @@ void test_fuse::destroy(void *userdata)
 
 int test_fuse::access(const char *path, int mask)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
 {
-
+    return ENOTSUP;
 }
 
 int test_fuse::fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
 {
-
-}
-
-void mythread(char **argv, std::string name)
-{
-    std::cout << "Log: (mythread)\n" << std::flush;
-    test_fuse::test_data *data = new test_fuse::test_data;
-    data->name = name;
-
-    std::cout << "Path: " << argv[1] << " Name: " << name << '\n' << std::flush;
-
-    int mfs_stat = fuse_main(2, argv, &test_fuse::mfs_ops, data);
+    return ENOTSUP;
 }
 
 int main(int argc, char *argv[])
@@ -312,16 +314,15 @@ int main(int argc, char *argv[])
     	return 1;
     }
 
-    char *mfs1_path[2] = {"test","./mfs1"};
-    std::string mfs1_name = "mfs1";
+    char *newpath[2] = {argv[1],argv[1]};
 
-    char *mfs2_path[2] = {"test","./mfs2"};
-    std::string mfs2_name = "mfs2";
+    test_fuse::test_data *data = new test_fuse::test_data;
+    data->name = newpath[0];
 
-    std::thread mfs1(mythread, mfs1_path, mfs1_name);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    std::thread mfs2(mythread, mfs2_path, mfs2_name);
-    mfs1.join();
-    mfs2.join();
+    data->tlog.open ("mfslog.txt", std::fstream::out | std::fstream::app);
+    data->tlog << "Log: (mythread)" << std::endl;
+    data->tlog << "Path: " << std::string(newpath[1]) << " Name: " << newpath[0] << std::endl;
+
+    int mfs_stat = fuse_main(2, newpath, &test_fuse::mfs_ops, data);
     return 0;
 }

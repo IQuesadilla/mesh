@@ -13,7 +13,7 @@ meshfs_test1: tests/meshfs/test1.cpp meshfs.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17
 
 meshfs_test2: tests/meshfs/test2.cpp meshfs.o
-	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -D_FILE_OFFSET_BITS=64 -lpthread -lfuse
+	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -D_FILE_OFFSET_BITS=64 -lpthread -lfuse3
 
 libfilemesh.so: filemesh.o netmesh.o meshfs.o
 	$(CXX) -o $(LIBDIR)/$@ $^ -shared

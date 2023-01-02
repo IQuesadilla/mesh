@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include <sys/stat.h>
-#include <bits/struct_stat.h>
+#include <bits/stat.h>
 #include <memory>
 #include <thread>
 
