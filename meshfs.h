@@ -43,7 +43,7 @@ public:
     ~meshfs();
 
     //int initfs(std::string config);
-    int initfs(DEVID id);
+    int initfs();
     int killfs();
 
     int importfs(std::string importpath);
@@ -71,9 +71,11 @@ public:
     void setmyid(DEVID id){myid = id;}
     DEVID getmyid(){return myid;}
 
+    void dumptostdout();
+
 private:
     struct {
-        int BLKSIZE = 4096;
+        int BLKSIZE = 512;
     } fs_meta;
 
     bool exists = false;
@@ -84,10 +86,15 @@ private:
     BLKID newblkid();
     Inode inodeatpath(std::string path);
 
+    bool islocal(BLKID id);
+    bool isonline(BLKID id);
+    int blkcount(size_t count);
+    int newblksize(int i, size_t count);
+
     std::map<std::string,Inode> open_files;
     std::map<Inode,file_meta> dict; 
     std::map<BLKID,std::vector<uint8_t*> > raw;
-    std::map<DEVID,std::pair<BLKID,size_t> > online;
+    std::map<DEVID,std::map<BLKID,size_t> > online;
 };
 
 #endif

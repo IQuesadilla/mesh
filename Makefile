@@ -1,7 +1,7 @@
 CXX = g++
 CFLAGS = -o $@ -c $< -std=c++17 -fPIC 
 TARGET = libfilemesh.so
-TESTS = meshfs_test1
+TESTS = meshfs_test1 meshfs_test2
 LIBDIR = ./lib/
 LIBS = -L$(LIBDIR) -lpthread
 
@@ -11,6 +11,9 @@ tests: $(TESTS)
 
 meshfs_test1: tests/meshfs/test1.cpp meshfs.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17
+
+meshfs_test2: tests/meshfs/test2.cpp meshfs.o
+	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -D_FILE_OFFSET_BITS=64 -lpthread -lfuse
 
 libfilemesh.so: filemesh.o netmesh.o meshfs.o
 	$(CXX) -o $(LIBDIR)/$@ $^ -shared
