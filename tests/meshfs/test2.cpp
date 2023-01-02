@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
     test_fuse::test_data *data = new test_fuse::test_data;
     data->name = newpath[0];
 
-    data->tlog.open ("mfslog.txt", std::fstream::out | std::fstream::app);
+    data->tlog.open ("/tmp/mfslog.txt", std::fstream::out);
     data->tlog << "Log: (mythread)" << std::endl;
     data->tlog << "Path: " << std::string(newpath[1]) << " Name: " << newpath[0] << std::endl;
 
