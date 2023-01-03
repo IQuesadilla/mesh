@@ -13,10 +13,71 @@
     #define HAVE_SYS_XATTR_H
 #endif
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <mutex>
+
 #define MYDEVID std::string
 bool firstname = true;
+#define SHM_KEY 0x1234
 
 #define TEST_DATA ((test_fuse::test_data *) fuse_get_context()->private_data)
+
+struct shared_data
+{
+    std::mutex reqmtx;
+    std::mutex respmtx;
+
+    bool is_Inode;
+    bool is_blkid;
+    bool is_reqblks;
+
+    BLKID req;
+    uint8_t blks[512];
+
+    MYDEVID id;
+    bool remove;
+    Inode thedict_Inode;
+    file_meta thedict_file_meta;
+    BLKID blks_blkid;
+    size_t blks_size_t;
+
+    bool loop_again;
+};
+
+int my_getblks(std::vector<BLKID> *req, std::map<BLKID, std::vector<uint8_t*> > *blks, void *userptr)
+{
+    std::cout << "Log: (my_getblks)" << std::endl;
+    std::cout << "Value: Size of req: " << req->size() << std::endl;
+    int ret = ((meshfs<MYDEVID>*)userptr)->reqblks(req,blks);
+    std::cout << "Value: Size of blks: " << blks->size() << std::endl;
+    return ret;
+}
+
+template <class DEVID>
+int my_updatemesh(DEVID id, bool remove, std::map<Inode,file_meta> *thedict, std::map<BLKID, size_t> *blks, void *userptr)
+{
+    std::cout << "Log: (my_updatemesh)" << std::endl;
+    std::cout << "Values: id=" << id << std::endl;
+
+    for (auto   it_thedict = thedict->cbegin(),
+                end_thedict = thedict->cend(),
+                it_blks = blks->cbegin(), end_blks = blks->cend();
+                it_m1 != end_m1 || it_m2 != end_m2;)
+    {
+        if (it_thedict != end_thedict)
+        {
+            //
+        }
+
+        if (it_blks != end_blks)
+        {
+            //
+        }
+    }
+
+    return ((meshfs<MYDEVID>*)userptr)->updatecache(id, remove, thedict, blks);
+}
 
 namespace test_fuse
 {
@@ -104,6 +165,8 @@ namespace test_fuse
         std::shared_ptr<meshfs<MYDEVID> > mfs;
         std::string name;
         std::fstream tlog;
+        std::shared_ptr<std::thread> thr;
+        shared_data *shmp;
     };
 
     static void mfs_file_info_default(fuse_file_info* fi)
@@ -112,6 +175,72 @@ namespace test_fuse
         fi->keep_cache = false;
         fi->nonseekable = true;
     };
+}
+
+void the_thread(struct test_fuse::test_data *mydata)
+{
+    mydata->tlog << "Log: (thread)" << std::endl;
+
+    int shm_id = shmget(SHM_KEY, sizeof(struct shared_data), 0644|IPC_CREAT);
+    if (shm_id < 0)
+    {
+        mydata->tlog << "Error: Failed opening shared memory" << std::endl;
+    }
+
+    mydata->shmp = (shared_data*)shmat(shm_id, NULL, 0);
+
+    while(1)
+    {
+        std::vector<BLKID> req;
+        std::map<BLKID, std::vector<uint8_t*> > blks;
+
+        MYDEVID id;
+        bool remove;
+        std::map<Inode,file_meta> thedict;
+        std::map<BLKID, size_t> theblks;
+
+        bool doloop;
+
+        //Read data into req
+        do
+        {
+            mydata->shmp->respmtx.unlock();
+            mydata->shmp->reqmtx.lock();
+
+            if (mydata->shmp->is_reqblks)
+            {
+                req.push_back(mydata->shmp->blks_blkid);
+            }
+
+            if (mydata->shmp->is_Inode)
+            {
+                thedict[mydata->shmp->thedict_Inode] = mydata->shmp->thedict_file_meta;
+            }
+
+            if (mydata->shmp->is_blkid)
+            {
+                theblks[mydata->shmp->blks_blkid] = mydata->shmp->blks_size_t;
+            }
+
+            doloop = mydata->shmp->loop_again;
+
+            mydata->shmp->respmtx.lock();
+            mydata->shmp->reqmtx.unlock();
+        }
+        while (doloop);
+
+        if (mydata->shmp->is_reqblks)
+        {
+            mydata->mfs->reqblks(&req,&blks);
+        }
+
+        if (mydata->shmp->is_Inode || mydata->shmp->is_blkid)
+        {
+            mydata->mfs->updatecache(id, remove, &thedict, &theblks);
+        }
+
+        //Write data into blks
+    }
 }
 
 int test_fuse::getattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
@@ -284,11 +413,17 @@ void *test_fuse::init(struct fuse_conn_info *conn, struct fuse_config *cfg)
     TEST_DATA->tlog << "Log: (init)" << std::endl;
     TEST_DATA->mfs.reset(new meshfs<MYDEVID>(TEST_DATA->name));
 
+    TEST_DATA->mfs->getblks= my_getblks;
+    TEST_DATA->mfs->updatemesh = my_updatemesh;
+
+    TEST_DATA->thr.reset(new std::thread(the_thread,TEST_DATA));
+
     return TEST_DATA;
 }
 
 void test_fuse::destroy(void *userdata)
 {
+
     delete TEST_DATA;
 }
 
@@ -319,8 +454,8 @@ int main(int argc, char *argv[])
     test_fuse::test_data *data = new test_fuse::test_data;
     data->name = newpath[0];
 
-    data->tlog.open ("/tmp/mfslog.txt", std::fstream::out);
-    data->tlog << "Log: (mythread)" << std::endl;
+    data->tlog.open ("mfslog.txt", std::fstream::out | std::fstream::app);
+    data->tlog << std::endl << "Log: (main)" << std::endl;
     data->tlog << "Path: " << std::string(newpath[1]) << " Name: " << newpath[0] << std::endl;
 
     int mfs_stat = fuse_main(2, newpath, &test_fuse::mfs_ops, data);
