@@ -5,6 +5,7 @@
 
 #define FUSE_USE_VERSION 30
 
+#include <errno.h>
 #include <fuse3/fuse.h>
 #include <unistd.h>
 #include <iostream>
@@ -60,19 +61,18 @@ int my_updatemesh(DEVID id, bool remove, std::map<Inode,file_meta> *thedict, std
     std::cout << "Log: (my_updatemesh)" << std::endl;
     std::cout << "Values: id=" << id << std::endl;
 
-    for (auto   it_thedict = thedict->cbegin(),
-                end_thedict = thedict->cend(),
-                it_blks = blks->cbegin(), end_blks = blks->cend();
-                it_m1 != end_m1 || it_m2 != end_m2;)
+    auto it_thedict = thedict->cbegin(), end_thedict = thedict->cend();
+    auto it_blks = blks->cbegin(), end_blks = blks->cend();
+    for (; it_blks != end_blks && it_thedict != end_thedict;)
     {
         if (it_thedict != end_thedict)
         {
-            //
+            it_thedict++;
         }
 
         if (it_blks != end_blks)
         {
-            //
+            it_blks++;
         }
     }
 
@@ -88,11 +88,11 @@ namespace test_fuse
     int unlink(const char *path);
     int rmdir(const char *path);
     int symlink(const char *path, const char *link);
-    int rename(const char *path, const char *newpath);
+    int rename(const char *path, const char *newpath, unsigned int);
     int link(const char *path, const char *newpath);
-    int chmod(const char *path, mode_t mode);
-    int chown(const char *path, uid_t uid, gid_t gid);
-    int truncate(const char *path, off_t newsize);
+    int chmod(const char *path, mode_t mode, struct fuse_file_info *fi);
+    int chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi);
+    int truncate(const char *path, off_t newsize, struct fuse_file_info *fi);
     int utime(const char *path, struct utimbuf *ubuf);
     int open(const char *path, fuse_file_info *fi);
     int read(const char *path, char *buf, size_t size, off_t offset, fuse_file_info *fi);
@@ -121,43 +121,57 @@ namespace test_fuse
 
     static fuse_operations mfs_ops = {
         .getattr = test_fuse::getattr,
-        .readlink = nullptr,//test_fuse::readlink,
+        .readlink = test_fuse::readlink,
         .mknod = test_fuse::mknod,
-        .mkdir = nullptr,//test_fuse::mkdir,
+        .mkdir = test_fuse::mkdir,
         .unlink = test_fuse::unlink,
-        .rmdir = nullptr,//test_fuse::rmdir,
-        .symlink = nullptr,//test_fuse::symlink,
-        .rename = nullptr,//test_fuse::rename,
-        .link = nullptr,//test_fuse::link,
-        .chmod = nullptr,//test_fuse::chmod,
-        .chown = nullptr,//test_fuse::chown,
-        .truncate = nullptr,//test_fuse::truncate,
+        .rmdir = test_fuse::rmdir,
+        .symlink = test_fuse::symlink,
+        .rename = test_fuse::rename,
+        .link = test_fuse::link,
+        .chmod = test_fuse::chmod,
+        .chown = test_fuse::chown,
+        .truncate = test_fuse::truncate,
 //        .utime = nullptr,//test_fuse::utime,
         .open = test_fuse::open,
         .read = test_fuse::read,
         .write = test_fuse::write,
         /** Just a placeholder, don't set */ // huh???
         .statfs = test_fuse::statfs,
-        .flush = nullptr,//test_fuse::flush,
+        .flush = test_fuse::flush,
         .release = test_fuse::release,
-        .fsync = nullptr,//test_fuse::fsync,
+        .fsync = test_fuse::fsync,
         
         #ifdef HAVE_SYS_XATTR_H
-        .setxattr = nullptr,//test_fuse::setxattr,
-        .getxattr = nullptr,//test_fuse::getxattr,
-        .listxattr = nullptr,//test_fuse::listxattr,
-        .removexattr = nullptr,//test_fuse::removexattr,
+        .setxattr = test_fuse::setxattr,
+        .getxattr = test_fuse::getxattr,
+        .listxattr = test_fuse::listxattr,
+        .removexattr = test_fuse::removexattr,
         #endif
         
         .opendir = test_fuse::opendir,
         .readdir = test_fuse::readdir,
         .releasedir = test_fuse::releasedir,
-        .fsyncdir = nullptr,//test_fuse::fsyncdir,
+        .fsyncdir = test_fuse::fsyncdir,
         .init = test_fuse::init,
         .destroy = test_fuse::destroy,
-        .access = nullptr,//test_fuse::access,
+        .access = test_fuse::access,
         //.ftruncate = nullptr,//test_fuse::ftruncate,
         //.fgetattr = nullptr,//test_fuse::fgetattr
+
+        //Fuse3
+        .create = nullptr,
+        .lock = nullptr,
+        .utimens = nullptr,
+        .bmap = nullptr,
+        .ioctl = nullptr,
+        .poll = nullptr,
+        .write_buf = nullptr,
+        .read_buf = nullptr,
+        .flock = nullptr,
+        .fallocate = nullptr,
+        .copy_file_range = nullptr,
+        .lseek = nullptr
     };
 
     struct test_data
@@ -245,165 +259,193 @@ void the_thread(struct test_fuse::test_data *mydata)
 
 int test_fuse::getattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (getattr)" << std::endl;
     statbuf->st_atim = {0};
-    statbuf->st_blksize = 64;
-    statbuf->st_blocks = 0;
+    statbuf->st_blksize = 512;
+    statbuf->st_blocks = 1;
     statbuf->st_ctim = {0};
-    statbuf->st_dev = 0;
-    statbuf->st_gid = 0;
+    statbuf->st_dev = 1;
+    statbuf->st_gid = 1000;
     statbuf->st_ino = 0;
     statbuf->st_mode = 0;
     statbuf->st_mtim = {0};
     statbuf->st_nlink = 1;
     statbuf->st_rdev = 0;
-    statbuf->st_size = 1000;
-    statbuf->st_uid = 0;
+    statbuf->st_size = 512;
+    statbuf->st_uid = 1000;
     return 0;
 }
 
 int test_fuse::readlink(const char *path, char *link, size_t size)
 {
+    TEST_DATA->tlog << "Log: Fuse: (readlink)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::mknod(const char *path, mode_t mode, dev_t dev)
 {
+    TEST_DATA->tlog << "Log: Fuse: (mknod)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::mkdir(const char *path, mode_t mode)
 {
+    TEST_DATA->tlog << "Log: Fuse: (mkdir)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::unlink(const char *path)
 {
+    TEST_DATA->tlog << "Log: Fuse: (unlink)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::rmdir(const char *path)
 {
+    TEST_DATA->tlog << "Log: Fuse: (rmdir)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::symlink(const char *path, const char *link)
 {
+    TEST_DATA->tlog << "Log: Fuse: (symlink)" << std::endl;
     return ENOTSUP;
 }
 
-int test_fuse::rename(const char *path, const char *newpath)
+int test_fuse::rename(const char *path, const char *newpath, unsigned int)
 {
+    TEST_DATA->tlog << "Log: Fuse: (rename)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::link(const char *path, const char *newpath)
 {
+    TEST_DATA->tlog << "Log: Fuse: (link)" << std::endl;
     return ENOTSUP;
 }
 
-int test_fuse::chmod(const char *path, mode_t mode)
+int test_fuse::chmod(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (chmod)" << std::endl;
     return ENOTSUP;
 }
 
-int test_fuse::chown(const char *path, uid_t uid, gid_t gid)
+int test_fuse::chown(const char *path, uid_t uid, gid_t gid, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (chown)" << std::endl;
     return ENOTSUP;
 }
 
-int test_fuse::truncate(const char *path, off_t newsize)
+int test_fuse::truncate(const char *path, off_t newsize, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (truncate)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::utime(const char *path, struct utimbuf *ubuf)
 {
+    TEST_DATA->tlog << "Log: Fuse: (utime)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::open(const char *path, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (open)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (read)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (write)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::statfs(const char *path, struct statvfs *statv)
 {
+    TEST_DATA->tlog << "Log: Fuse: (statfs)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::flush(const char *path, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (flush)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::release(const char *path, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (release)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::fsync(const char *path, int datasync, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (fsync)" << std::endl;
     return ENOTSUP;
 }
 
 #ifdef HAVE_SYS_XATTR_H
 int test_fuse::setxattr(const char *path, const char *name, const char *value, size_t size, int flags)
 {
+    TEST_DATA->tlog << "Log: Fuse: (setxattr)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::getxattr(const char *path, const char *name, char *value, size_t)
 {
+    TEST_DATA->tlog << "Log: Fuse: (getxattr)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::listxattr(const char *path, char *list, size_t size)
 {
+    TEST_DATA->tlog << "Log: Fuse: (listxattr)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::removexattr(const char *path, const char *name)
 {
+    TEST_DATA->tlog << "Log: Fuse: (removexattr)" << std::endl;
     return ENOTSUP;
 }
 #endif
 
 int test_fuse::opendir(const char *path, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (opendir)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, fuse_readdir_flags flags)
 {
+    TEST_DATA->tlog << "Log: Fuse: (readdir)" << std::endl;
     // TODO
     return ENOTSUP;
 }
 
 int test_fuse::fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (fsyncdir)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::releasedir(const char *path, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (releasedir)" << std::endl;
     // TODO
     return ENOTSUP;
 }
@@ -423,22 +465,25 @@ void *test_fuse::init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 
 void test_fuse::destroy(void *userdata)
 {
-
+    TEST_DATA->tlog << "Log: Fuse: (destroy)" << std::endl;
     delete TEST_DATA;
 }
 
 int test_fuse::access(const char *path, int mask)
 {
+    TEST_DATA->tlog << "Log: Fuse: (access)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (ftruncate)" << std::endl;
     return ENOTSUP;
 }
 
 int test_fuse::fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
 {
+    TEST_DATA->tlog << "Log: Fuse: (fgetattr)" << std::endl;
     return ENOTSUP;
 }
 
