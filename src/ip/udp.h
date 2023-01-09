@@ -3,10 +3,18 @@
 #pragma once
 
 #include "ip.h"
+#include <string>
 
 class udp : public ip
 {
-    udp();
+public:
+    udp() {};
+
+    bool initSocket(uint setport, std::string addr = "0.0.0.0");
+    bool testconn(uint setport);
+
+private:
+    //int fd;
 };
 
 #endif
