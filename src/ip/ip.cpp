@@ -44,17 +44,8 @@ const packet ip::recv()
     std::cout << "Value: tempcount: " << tempcount << std::endl;
     std::cout << "Value: errno: " << errno << std::endl;
     std::cout << "Value: fd: " << fd << std::endl;
-    /*while (tempcount > 0)
-    {
-        std::cout << "Log: Receive Loop" << std::endl;
-        int prevtotal = total;
-        total += tempcount;
-        toreturn.raw = (char*)realloc((void*)toreturn.raw, total);
-        tempcount = recv(fd,(void*)&toreturn.raw[prevtotal],RECVBLKSIZE,MSG_DONTWAIT);
-        std::cout << "Value: tempcount: " << tempcount << std::endl;    
-    }*/
 
-    toreturn.length = size;
+    toreturn.length = tempcount;
 
     return toreturn;
 }

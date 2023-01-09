@@ -499,7 +499,7 @@ int main(int argc, char *argv[])
     test_fuse::test_data *data = new test_fuse::test_data;
     data->name = newpath[0];
 
-    data->tlog.open ("mfslog.txt", std::fstream::out | std::fstream::app);
+    data->tlog.open ("mfs.log", std::fstream::out | std::fstream::app);
     data->tlog << std::endl << "Log: (main)" << std::endl;
     data->tlog << "Path: " << std::string(newpath[1]) << " Name: " << newpath[0] << std::endl;
 
