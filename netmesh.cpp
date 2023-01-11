@@ -410,7 +410,7 @@ int netmesh::updateDeviceList()
             tempdev.address = recvaddr.sin_addr.s_addr;
             tempdev.timeout = settimeout;
 
-            tempdev.devconn.reset();
+            tempdev.devconn.reset(new udp());
             tempdev.devconn->initSocket(UDPPORT);
 
             devices.insert(std::make_pair(namestring, tempdev));
