@@ -24,7 +24,7 @@ public:
     ip() {};
     ~ip() { close(fd); }
 
-    virtual bool initSocket(uint port, std::string addr) = 0;
+    virtual bool initSocket(uint port) = 0;
 
     bool send(const packet raw);
     const packet recv();

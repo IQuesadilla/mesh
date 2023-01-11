@@ -1,8 +1,8 @@
-#include "netmesh.h"
+#include "../../netmesh.h"
 
 int main (int argc, char **argv)
 {
-    mesh *temp = new mesh();
+    netmesh *temp = new netmesh();
     temp->setBroadcastAlive(false);
     temp->initBroadcastSocket();
     temp->initUpdateThread();

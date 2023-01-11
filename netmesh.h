@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include "tinyxml2/tinyxml2.h"
+#include "src/ip/udp.h"
 
 #define BCADDR "192.168.123.255"
 #define MYADDR "192.168.123."
@@ -42,12 +43,14 @@
 class netmesh
 {
 public:
+    typedef std::vector<char> netdata;
+
     netmesh();
     ~netmesh() {}
 
-    std::mutex dumbshitsafety;
-    std::vector<uint8_t> dumbshit;
-    int cocksafety = 0;
+    //std::mutex dumbshitsafety;
+    //std::vector<uint8_t> dumbshit;
+    //int cocksafety = 0;
 
     int initserver(std::string name);
     int killserver();
@@ -55,38 +58,40 @@ public:
     int initUpdateThread();
     int initBroadcastSocket();
     int initListenSocket();
-    int initUDPSocket();
+    //int initUDPSocket();
 
-    bool isConnected() {return connected;}
-    //std::string returnErrorMessage(ERRCODES err);
+    bool isConnected() { return connected; }
+    // std::string returnErrorMessage(ERRCODES err);
 
     int conntodevice(std::string devname);
-    //int sendTCP(tinyxml2::XMLNode *value, std::string name);
-    //tinyxml2::XMLNode *recieveTCP(tinyxml2::XMLDocument *value, std::string name);
+    // int sendTCP(tinyxml2::XMLNode *value, std::string name);
+    // tinyxml2::XMLNode *recieveTCP(tinyxml2::XMLDocument *value, std::string name);
 
     int sendUDP(tinyxml2::XMLNode *value);
     int receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data);
-    //tinyxml2::XMLNode *receiveUDP(tinyxml2::XMLDocument *target, std::string from);
+    // tinyxml2::XMLNode *receiveUDP(tinyxml2::XMLDocument *target, std::string from);
+
+    int sendraw(std::string to, netdata *data);
 
     std::string returnDevices();
     int updateDeviceList();
 
-    bool getBroadcastAlive() {return flags.broadcastalive;}
-    bool setBroadcastAlive(bool in) {return (flags.broadcastalive = in);}
-    bool getEnableUpdateThread() {return flags.enableupdatethread;}
-    bool setEnableUpdateThread(bool in) {return (flags.enableupdatethread = in);}
-    std::string getName() {return myName;}
-    std::string setName(std::string in) {return (myName = in);}
-private:
+    bool getBroadcastAlive() { return flags.broadcastalive; }
+    bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
+    bool getEnableUpdateThread() { return flags.enableupdatethread; }
+    bool setEnableUpdateThread(bool in) { return (flags.enableupdatethread = in); }
+    std::string getName() { return myName; }
+    std::string setName(std::string in) { return (myName = in); }
 
+private:
     int broadcastAlive();
     int checkforconn();
     static void updateThread(netmesh *mynetmesh);
 
     struct device
     {
-        std::string name;
         in_addr_t address;
+        std::shared_ptr<ip> devconn;
         std::chrono::_V2::system_clock::time_point timeout;
     };
 
@@ -96,7 +101,8 @@ private:
         int connsock;
     };
 
-    struct {
+    struct
+    {
         bool broadcastalive;
         bool enableupdatethread;
     } flags;
@@ -105,9 +111,9 @@ private:
     std::string myName;
     bool connected;
     sockaddr_in bcaddr;
-    std::vector<device> devices;
+    std::map<std::string, device> devices;
     std::vector<connection> connections;
-    //std::map<std::string,int> receivebuffer;
+    // std::map<std::string,int> receivebuffer;
     std::thread myUpdateThread;
 };
 

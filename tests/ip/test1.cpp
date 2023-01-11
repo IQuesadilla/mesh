@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
     std::cout << "Log: (main)" << std::endl;
     udp serversocket, clientsocket;
     serversocket.initSocket(PORT);
-    clientsocket.testconn(PORT);
+    clientsocket.initSocket(PORT);
+    serversocket.bindaddr();
 
     std::thread serverthread(server,&serversocket);
     std::thread clientthread(client,&clientsocket);
