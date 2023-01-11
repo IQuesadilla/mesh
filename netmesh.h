@@ -72,6 +72,7 @@ public:
     // tinyxml2::XMLNode *receiveUDP(tinyxml2::XMLDocument *target, std::string from);
 
     int sendraw(std::string to, netdata *data);
+    int recvraw(std::string from, netdata *data);
 
     std::string returnDevices();
     int updateDeviceList();

@@ -325,6 +325,24 @@ int netmesh::sendraw(std::string to, netdata *data)
     return 0;
 }
 
+int netmesh::recvraw(std::string from, netdata *data)
+{
+    std::cout << "Log: (recvraw)" << std::endl;
+    std::cout << "Value: from: " << from << std::endl;
+    if (devices.find(from) != devices.end())
+    {
+        poll(devices.at(from).devconn->topoll(POLLIN),1,TIMEOUTTIME);
+        packet temppack = devices.at(from).devconn->recv();
+        data->resize(0);
+        data->insert(data->begin(),temppack.raw[0],temppack.raw[temppack.length]);
+    }
+    else
+    {
+        std::cout << "Warning: Tried to recv data from invalid name" << std::endl;
+    }
+    return 0;
+}
+
 std::string netmesh::returnDevices()
 {
     std::stringstream ss;
