@@ -16,6 +16,9 @@ int netmesh::initserver(std::string name)
     initBroadcastSocket();
     // initListenSocket();
     //initUDPSocket();
+    sockGeneral.reset(new udp());
+    sockGeneral->initSocket(UDPPORT);
+    sockGeneral->bindaddr();
 
     myName = name;
     connected = true;
@@ -316,7 +319,7 @@ int netmesh::sendraw(std::string to, netdata *data)
         temppack.raw = data->data();
         temppack.length = data->size();
 
-        devices.at(to).devconn->send(temppack);
+        sockGeneral->send(temppack);
     }
     else
     {
@@ -331,8 +334,8 @@ int netmesh::recvraw(std::string from, netdata *data)
     std::cout << "Value: from: " << from << std::endl;
     if (devices.find(from) != devices.end())
     {
-        poll(devices.at(from).devconn->topoll(POLLIN),1,TIMEOUTTIME);
-        packet temppack = devices.at(from).devconn->recv();
+        poll(sockGeneral->topoll(POLLIN),1,TIMEOUTTIME);
+        packet temppack = sockGeneral->recv();
         data->resize(0);
         data->insert(data->begin(),temppack.raw[0],temppack.raw[temppack.length]);
     }
@@ -410,9 +413,9 @@ int netmesh::updateDeviceList()
             tempdev.address = recvaddr.sin_addr.s_addr;
             tempdev.timeout = settimeout;
 
-            tempdev.devconn.reset(new udp());
-            tempdev.devconn->initSocket(UDPPORT);
-            ((udp*)tempdev.devconn.get())->bindaddr();
+            //tempdev.devconn.reset(new udp());
+            //tempdev.devconn->initSocket(UDPPORT);
+            //((udp*)tempdev.devconn.get())->bindaddr();
 
             devices.insert(std::make_pair(namestring, tempdev));
 

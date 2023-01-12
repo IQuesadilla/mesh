@@ -92,7 +92,7 @@ private:
     struct device
     {
         in_addr_t address;
-        std::shared_ptr<ip> devconn;
+        //std::shared_ptr<ip> devconn;
         std::chrono::_V2::system_clock::time_point timeout;
     };
 
@@ -116,6 +116,7 @@ private:
     std::vector<connection> connections;
     // std::map<std::string,int> receivebuffer;
     std::thread myUpdateThread;
+    std::shared_ptr<udp> sockGeneral;
 };
 
 #endif
