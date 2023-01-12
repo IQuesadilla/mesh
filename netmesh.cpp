@@ -334,7 +334,7 @@ int netmesh::recvraw(std::string from, netdata *data)
     std::cout << "Value: from: " << from << std::endl;
     if (devices.find(from) != devices.end())
     {
-        poll(sockGeneral->topoll(POLLIN),1,TIMEOUTTIME);
+        poll(sockGeneral->topoll(POLLIN),1,-1);
         packet temppack = sockGeneral->recv();
         data->resize(0);
         data->insert(data->begin(),temppack.raw[0],temppack.raw[temppack.length]);
