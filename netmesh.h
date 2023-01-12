@@ -23,7 +23,6 @@
 #include "src/ip/udp.h"
 
 #define BCADDR "192.168.123.255"
-#define MYADDR "192.168.123."
 
 #define BCPORT 1999
 #define TCPPORT 1998
@@ -56,7 +55,7 @@ public:
 
     int initUpdateThread();
     int initBroadcastSocket(std::string addr);
-    int initListenSocket();
+    int initListenSocket(std::string myaddr = "0.0.0.0");
 
     bool isConnected() { return connected; }
 

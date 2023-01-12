@@ -87,7 +87,7 @@ int netmesh::initBroadcastSocket(std::string addr)
     return 0;
 }
 
-int netmesh::initListenSocket()
+int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
 {
     if ((listensock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         return errno;
@@ -102,7 +102,7 @@ int netmesh::initListenSocket()
     memset(&listenaddr, '\0', sizeof(listenaddr));
 
     listenaddr.sin_family = AF_INET;
-    listenaddr.sin_addr.s_addr = inet_addr(MYADDR); // htonl(INADDR_ANY);
+    listenaddr.sin_addr.s_addr = inet_addr(myaddr.c_str());
     listenaddr.sin_port = htons(TCPPORT);
 
     if (bind(listensock, (const struct sockaddr *)&listenaddr, sizeof(listenaddr)) < 0)
