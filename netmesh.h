@@ -11,6 +11,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <error.h>
+#include <ifaddrs.h>
 #include <thread>
 #include <mutex>
 #include <vector>
@@ -48,11 +49,13 @@ public:
     netmesh();
     ~netmesh() {}
 
-    int initserver(std::string name);
+    int initserver(std::string name, std::string mesh);
     int killserver();
 
+    std::vector<std::string> findAvailableMeshes();
+
     int initUpdateThread();
-    int initBroadcastSocket();
+    int initBroadcastSocket(std::string addr);
     int initListenSocket();
 
     bool isConnected() { return connected; }

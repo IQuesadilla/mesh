@@ -15,8 +15,19 @@ int main(int argc, char *argv[])
     std::cout << "Log: Resetting with new netmesh object" << std::endl;
     mesh1.reset(new netmesh());
 
+    std::cout << "Log: Finding available meshes" << std::endl;
+    auto avail = mesh1->findAvailableMeshes();
+    int n = 0;
+    for (auto x : avail)
+    {
+        std::cout << n++ << ": " << x << std::endl;
+    }
+
+    std::cin >> n;
+    std::cout << "Log: Selected " << avail[n] << " mesh" << std::endl;
+
     std::cout << "Log: Running init server with defaults" << std::endl;
-    mesh1->initserver(std::string(argv[1]));
+    mesh1->initserver(std::string(argv[1]), avail[n]);
 
     std::cout << "Log: Delaying for 10s to allow for another device" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));

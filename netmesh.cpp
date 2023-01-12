@@ -6,15 +6,15 @@ netmesh::netmesh()
     setEnableUpdateThread(true);
 }
 
-int netmesh::initserver(std::string name)
+int netmesh::initserver(std::string name, std::string mesh)
 {
     if (connected == true)
         return 0;
 
     connected = false;
     setName(name);
-    initBroadcastSocket();
-    
+    initBroadcastSocket(mesh);
+
     sockGeneral.reset(new udp());
     sockGeneral->initSocket(UDPPORT);
     sockGeneral->bindaddr();
@@ -34,6 +34,27 @@ int netmesh::killserver()
     return 0;
 }
 
+std::vector<std::string> netmesh::findAvailableMeshes()
+{
+    std::vector<std::string> to_return;
+
+    struct ifaddrs * ifAddrStruct=NULL;
+    struct ifaddrs * ifa=NULL;
+
+    getifaddrs(&ifAddrStruct);
+
+    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_ifu.ifu_broadaddr == NULL)
+            continue;
+
+        std::string tempbcaddr = inet_ntoa(((sockaddr_in*)ifa->ifa_ifu.ifu_broadaddr)->sin_addr);
+        //std::cout << "Log: Available mesh: " << tempbcaddr<< std::endl;
+        to_return.push_back(tempbcaddr);
+    }
+
+    return to_return;
+}
+
 int netmesh::initUpdateThread()
 {
     myUpdateThread = std::thread(updateThread, this);
@@ -41,7 +62,7 @@ int netmesh::initUpdateThread()
     return 0;
 }
 
-int netmesh::initBroadcastSocket()
+int netmesh::initBroadcastSocket(std::string addr)
 {
     connected = false;
     if ((bcsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -56,7 +77,7 @@ int netmesh::initBroadcastSocket()
     memset(&bcaddr, '\0', sizeof(bcaddr));
 
     bcaddr.sin_family = AF_INET;
-    bcaddr.sin_addr.s_addr = inet_addr(BCADDR);
+    bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
     bcaddr.sin_port = htons(BCPORT);
 
     if (bind(bcsock, (const struct sockaddr *)&bcaddr, sizeof(bcaddr)) < 0)
