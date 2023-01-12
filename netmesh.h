@@ -48,28 +48,16 @@ public:
     netmesh();
     ~netmesh() {}
 
-    //std::mutex dumbshitsafety;
-    //std::vector<uint8_t> dumbshit;
-    //int cocksafety = 0;
-
     int initserver(std::string name);
     int killserver();
 
     int initUpdateThread();
     int initBroadcastSocket();
     int initListenSocket();
-    //int initUDPSocket();
 
     bool isConnected() { return connected; }
-    // std::string returnErrorMessage(ERRCODES err);
 
     int conntodevice(std::string devname);
-    // int sendTCP(tinyxml2::XMLNode *value, std::string name);
-    // tinyxml2::XMLNode *recieveTCP(tinyxml2::XMLDocument *value, std::string name);
-
-    int sendUDP(tinyxml2::XMLNode *value);
-    int receiveUDP(tinyxml2::XMLDocument *target, tinyxml2::XMLNode **data);
-    // tinyxml2::XMLNode *receiveUDP(tinyxml2::XMLDocument *target, std::string from);
 
     int sendraw(std::string to, netdata *data);
     int recvraw(std::string from, netdata *data);
@@ -114,7 +102,6 @@ private:
     sockaddr_in bcaddr;
     std::map<std::string, device> devices;
     std::vector<connection> connections;
-    // std::map<std::string,int> receivebuffer;
     std::thread myUpdateThread;
     std::shared_ptr<udp> sockGeneral;
 };
