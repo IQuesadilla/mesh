@@ -412,6 +412,7 @@ int netmesh::updateDeviceList()
 
             tempdev.devconn.reset(new udp());
             tempdev.devconn->initSocket(UDPPORT);
+            ((udp*)tempdev.devconn.get())->bindaddr();
 
             devices.insert(std::make_pair(namestring, tempdev));
 
