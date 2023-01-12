@@ -43,7 +43,7 @@ const packet ip::recv()
     struct sockaddr_in *fromaddr = new struct sockaddr_in;
     socklen_t fromaddrlen;
 
-    int tempcount = recvfrom(fd,(void*)toreturn.raw,size,0,(struct sockaddr*)fromaddr,&fromaddrlen);
+    int tempcount = recvfrom(fd,(void*)toreturn.raw,size,MSG_DONTWAIT,(struct sockaddr*)fromaddr,&fromaddrlen);
     std::cout << "Value: tempcount: " << tempcount << std::endl;
     std::cout << "Value: errno: " << errno << std::endl;
     std::cout << "Value: fd: " << fd << std::endl;
