@@ -210,13 +210,13 @@ int netmesh::updateDeviceList()
         }
     }
 
-    for (auto &x : devices)
+    for (auto it = devices.end(); it != devices.begin(); it--)
     {
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
         {
             std::cout << "Log: Removing device from mesh" << std::endl;
-            std::cout << "Value: Device: " << x.first << std::endl;
-            devices.erase(x.first);
+            std::cout << "Value: Device: " << it->first << std::endl;
+            devices.erase(it->first);
             std::cout << "Log: Successfully removed device from mesh" << std::endl;
         }
     }
