@@ -175,7 +175,6 @@ int netmesh::updateDeviceList()
     char *recvbuff = (char *)malloc(BUFFLEN),
          *namebuff = (char *)malloc(BUFFLEN),
          *addrbuff = (char *)malloc(BUFFLEN);
-    int count = 0;
     while (1)
     {
         sockaddr_in recvaddr;
@@ -215,6 +214,7 @@ int netmesh::updateDeviceList()
     {
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
         {
+            std::cout << "Log: Removing device from mesh" << std::endl;
             devices.erase(x.first);
         }
     }
