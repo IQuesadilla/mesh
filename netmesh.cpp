@@ -216,6 +216,7 @@ int netmesh::updateDeviceList()
         {
             std::cout << "Log: Removing device from mesh" << std::endl;
             devices.erase(x.first);
+            std::cout << "Log: Successfully removed device from mesh" << std::endl;
         }
     }
 
