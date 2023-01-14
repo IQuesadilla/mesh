@@ -1,3 +1,6 @@
 [submodule "tinyxml2"]
 	path = tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "logcpp"]
+	path = logcpp
+	url = git@github.com:IQuesadilla/logcpp.git
