@@ -210,7 +210,7 @@ int netmesh::updateDeviceList()
         }
     }
 
-    for (auto it = devices.end(); it != devices.begin(); it--)
+    for (auto it = devices.cbegin(); it != devices.cend();)
     {
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
         {
@@ -218,6 +218,10 @@ int netmesh::updateDeviceList()
             std::cout << "Value: Device: " << it->first << std::endl;
             devices.erase(it->first);
             std::cout << "Log: Successfully removed device from mesh" << std::endl;
+        }
+        else
+        {
+            ++it;
         }
     }
 
