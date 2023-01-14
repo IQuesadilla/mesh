@@ -19,7 +19,7 @@ meshfs_test1: tests/meshfs/test1.cpp meshfs.o
 meshfs_test2: tests/meshfs/test2.cpp meshfs.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -D_FILE_OFFSET_BITS=64 -lpthread -lfuse3
 
-netmesh_test1: tests/netmesh/test1.cpp netmesh.o ip_ip.o ip_udp.o
+netmesh_test1: tests/netmesh/test1.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread
 
 netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o
@@ -40,7 +40,7 @@ meshfs.o: meshfs.cpp meshfs.h
 libnetmesh.so: netmesh.o
 	$(CXX) -o $(LIBDIR)/$@ $< -shared
 
-netmesh.o: netmesh.cpp netmesh.h tinyxml2/libtinyxml2.a ip_udp.o ip_ip.o
+netmesh.o: netmesh.cpp netmesh.h
 	$(CXX) $(CFLAGS)
 
 ip_udp.o: src/ip/udp.cpp src/ip/udp.h src/ip/ip.h

@@ -21,6 +21,7 @@
 #include <memory>
 #include "tinyxml2/tinyxml2.h"
 #include "src/ip/udp.h"
+#include "logcpp/logcpp.h"
 
 #define BCADDR "192.168.123.255"
 
@@ -45,11 +46,13 @@ class netmesh
 public:
     typedef std::vector<char> netdata;
 
-    netmesh();
+    netmesh(std::shared_ptr<logcpp> log);
     ~netmesh() {}
 
     int initserver(std::string name, std::string mesh);
     int killserver();
+
+    void enableLogging(std::shared_ptr<logcpp> log);
 
     std::vector<std::string> findAvailableMeshes();
 
@@ -106,6 +109,7 @@ private:
     std::vector<connection> connections;
     std::thread myUpdateThread;
     std::shared_ptr<udp> sockGeneral;
+    std::shared_ptr<logcpp> logobj;
 };
 
 #endif

@@ -1,9 +1,10 @@
 #include "netmesh.h"
 
-netmesh::netmesh()
+netmesh::netmesh(std::shared_ptr<logcpp> log)
 {
     setBroadcastAlive(true);
     setEnableUpdateThread(true);
+    enableLogging(log);
 }
 
 int netmesh::initserver(std::string name, std::string mesh)
@@ -32,6 +33,11 @@ int netmesh::killserver()
     if (getEnableUpdateThread())
         myUpdateThread.join();
     return 0;
+}
+
+void netmesh::enableLogging(std::shared_ptr<logcpp> log)
+{
+    logobj = log;
 }
 
 std::vector<std::string> netmesh::findAvailableMeshes()
