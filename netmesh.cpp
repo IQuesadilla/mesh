@@ -215,6 +215,7 @@ int netmesh::updateDeviceList()
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
         {
             std::cout << "Log: Removing device from mesh" << std::endl;
+            std::cout << "Value: Device: " << x.first << std::endl;
             devices.erase(x.first);
             std::cout << "Log: Successfully removed device from mesh" << std::endl;
         }
