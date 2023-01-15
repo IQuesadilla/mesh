@@ -1,14 +1,17 @@
 #include "netmesh.h"
 
-netmesh::netmesh(std::shared_ptr<logcpp> log)
+netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 {
+    enableLogging(logptr);
+
+    auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
     setEnableUpdateThread(true);
-    enableLogging(log);
 }
 
 int netmesh::initserver(std::string name, std::string mesh)
 {
+    auto log = logobj->function("initserver");
     if (connected == true)
         return 0;
 
@@ -29,6 +32,7 @@ int netmesh::initserver(std::string name, std::string mesh)
 
 int netmesh::killserver()
 {
+    auto log = logobj->function("killserver");
     connected = false;
     if (getEnableUpdateThread())
         myUpdateThread.join();
@@ -38,10 +42,12 @@ int netmesh::killserver()
 void netmesh::enableLogging(std::shared_ptr<logcpp> log)
 {
     logobj = log;
+    auto log = logobj->function("enableLogging");
 }
 
 std::vector<std::string> netmesh::findAvailableMeshes()
 {
+    auto log = logobj->function("findAvailableMeshes");
     std::vector<std::string> to_return;
 
     struct ifaddrs * ifAddrStruct=NULL;
@@ -63,6 +69,7 @@ std::vector<std::string> netmesh::findAvailableMeshes()
 
 int netmesh::initUpdateThread()
 {
+    auto log = logobj->function("initUpdateThread");
     myUpdateThread = std::thread(updateThread, this);
     setEnableUpdateThread(true);
     return 0;
@@ -70,6 +77,7 @@ int netmesh::initUpdateThread()
 
 int netmesh::initBroadcastSocket(std::string addr)
 {
+    auto log = logobj->function("initBroadcastSocket");
     connected = false;
     if ((bcsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         return errno;
@@ -95,6 +103,7 @@ int netmesh::initBroadcastSocket(std::string addr)
 
 int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
 {
+    auto log = logobj->function("initListenSocket");
     if ((listensock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         return errno;
 
@@ -118,6 +127,7 @@ int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
 
 int netmesh::sendraw(std::string to, netdata *data)
 {
+    auto log = logobj->function("sendraw");
     std::cout << "Log: (sendraw)" << std::endl;
     std::cout << "Value: to: " << to << std::endl;
     if (devices.find(to) != devices.end())
@@ -138,6 +148,7 @@ int netmesh::sendraw(std::string to, netdata *data)
 
 int netmesh::recvraw(std::string from, netdata *data)
 {
+    auto log = logobj->function("recvraw");
     std::cout << "Log: (recvraw)" << std::endl;
     std::cout << "Value: from: " << from << std::endl;
     if (devices.find(from) != devices.end())
@@ -156,6 +167,7 @@ int netmesh::recvraw(std::string from, netdata *data)
 
 std::string netmesh::returnDevices()
 {
+    auto log = logobj->function("returnDevices");
     std::stringstream ss;
 
     ss << "Connected Devices: " << std::endl;
@@ -169,6 +181,7 @@ std::string netmesh::returnDevices()
 
 int netmesh::broadcastAlive()
 {
+    auto log = logobj->function("broadcastAlive");
     std::string message = "++<" + myName;
     int count = sendto(bcsock, message.c_str(), message.length() + 1, MSG_CONFIRM, (const struct sockaddr *)&bcaddr, sizeof(bcaddr));
     if (count == -1)
@@ -178,6 +191,7 @@ int netmesh::broadcastAlive()
 
 int netmesh::updateDeviceList()
 {
+    auto log = logobj->function("updateDeviceList");
     char *recvbuff = (char *)malloc(BUFFLEN),
          *namebuff = (char *)malloc(BUFFLEN),
          *addrbuff = (char *)malloc(BUFFLEN);
@@ -236,6 +250,7 @@ int netmesh::updateDeviceList()
 
 int netmesh::checkforconn()
 {
+    auto log = logobj->function("checkforconn");
     if (listen(listensock, 10) > -1)
     {
         if (errno == EWOULDBLOCK || errno == EAGAIN)
