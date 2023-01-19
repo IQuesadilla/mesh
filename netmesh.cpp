@@ -42,7 +42,7 @@ int netmesh::killserver()
 void netmesh::enableLogging(std::shared_ptr<logcpp> log)
 {
     logobj = log;
-    auto log = logobj->function("enableLogging");
+    auto templog = logobj->function("enableLogging");
 }
 
 std::vector<std::string> netmesh::findAvailableMeshes()
@@ -128,7 +128,6 @@ int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
 int netmesh::sendraw(std::string to, netdata *data)
 {
     auto log = logobj->function("sendraw");
-    std::cout << "Log: (sendraw)" << std::endl;
     std::cout << "Value: to: " << to << std::endl;
     if (devices.find(to) != devices.end())
     {
