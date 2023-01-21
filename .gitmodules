@@ -3,4 +3,4 @@
 	url = https://github.com/leethomason/tinyxml2.git
 [submodule "logcpp"]
 	path = logcpp
-	url = git@github.com:IQuesadilla/logcpp.git
+	url = https://github.com/IQuesadilla/logcpp.git
