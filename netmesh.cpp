@@ -230,7 +230,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
         sscanf(recvbuff, "++<%s", namebuff);
         std::string namestring = namebuff;
         if (namestring == myName)
-            return 0;
+            return 1;
         auto settimeout = std::chrono::system_clock::now();
 
         if (devices.find(namestring) != devices.end())
