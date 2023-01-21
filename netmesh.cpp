@@ -9,6 +9,12 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
     setEnableUpdateThread(true);
 }
 
+netmesh::~netmesh()
+{
+    connected = false;
+    myUpdateThread.join();
+}
+
 int netmesh::initserver(std::string name, std::string mesh)
 {
     auto log = logobj->function("initserver");
@@ -348,6 +354,7 @@ void netmesh::updateThread(netmesh *mynetmesh)
         auto temptimeout = polltimeout;
         while (mynetmesh->updateDeviceList(std::chrono::duration_cast<std::chrono::milliseconds>(temptimeout)))
         {
+            std::cout << "here" << std::endl;
             temptimeout = std::chrono::milliseconds(UPDATETIME) - (std::chrono::system_clock::now().time_since_epoch() - polltimeout);
         }
 

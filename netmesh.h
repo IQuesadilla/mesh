@@ -48,7 +48,7 @@ public:
     typedef std::vector<char> netdata;
 
     netmesh(std::shared_ptr<logcpp> log);
-    ~netmesh() {myUpdateThread.join(); }
+    ~netmesh();
 
     int initserver(std::string name, std::string mesh);
     int killserver();
