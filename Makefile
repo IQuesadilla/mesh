@@ -22,7 +22,7 @@ meshfs_test2: tests/meshfs/test2.cpp meshfs.o
 netmesh_test1: tests/netmesh/test1.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread
 
-netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o
+netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread
 
 libfilemesh.so: filemesh.o netmesh.o meshfs.o

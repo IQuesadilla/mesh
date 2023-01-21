@@ -19,6 +19,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <functional>
 #include "tinyxml2/tinyxml2.h"
 #include "src/ip/udp.h"
 #include "logcpp/logcpp.h"
@@ -47,7 +48,7 @@ public:
     typedef std::vector<char> netdata;
 
     netmesh(std::shared_ptr<logcpp> log);
-    ~netmesh() {}
+    ~netmesh() {myUpdateThread.join(); }
 
     int initserver(std::string name, std::string mesh);
     int killserver();
@@ -68,7 +69,9 @@ public:
     int recvraw(std::string from, netdata *data);
 
     std::string returnDevices();
-    int updateDeviceList();
+    int updateDeviceList(std::chrono::milliseconds timeout);
+
+    uint16_t registerUDP(std::function<void(short int)> fn);
 
     bool getBroadcastAlive() { return flags.broadcastalive; }
     bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
@@ -80,19 +83,22 @@ public:
 private:
     int broadcastAlive();
     int checkforconn();
+    uint16_t findAvailablePort();
+    void pollAll(std::chrono::milliseconds timeout);
     static void updateThread(netmesh *mynetmesh);
 
     struct device
     {
         in_addr_t address;
-        //std::shared_ptr<ip> devconn;
+        // std::shared_ptr<ip> devconn;
         std::chrono::_V2::system_clock::time_point timeout;
     };
 
     struct connection
     {
         std::string devname;
-        int connsock;
+        std::shared_ptr<ip> connptr;
+        std::function<void(short int)> callback;
     };
 
     struct
@@ -101,12 +107,14 @@ private:
         bool enableupdatethread;
     } flags;
 
-    int bcsock, listensock, udpsock; // TODO Initialize udpsock
+    int listensock, udpsock; // TODO Initialize udpsock
+    std::shared_ptr<udp> bcsock;
+    std::chrono::_V2::system_clock::time_point last_update;
     std::string myName;
     bool connected;
     sockaddr_in bcaddr;
     std::map<std::string, device> devices;
-    std::vector<connection> connections;
+    std::map<uint16_t,connection> connections;
     std::thread myUpdateThread;
     std::shared_ptr<udp> sockGeneral;
     std::shared_ptr<logcpp> logobj;

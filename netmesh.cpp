@@ -42,7 +42,7 @@ int netmesh::killserver()
 void netmesh::enableLogging(std::shared_ptr<logcpp> log)
 {
     logobj = log;
-    auto log = logobj->function("enableLogging");
+    auto templog = logobj->function("enableLogging");
 }
 
 std::vector<std::string> netmesh::findAvailableMeshes()
@@ -79,6 +79,7 @@ int netmesh::initBroadcastSocket(std::string addr)
 {
     auto log = logobj->function("initBroadcastSocket");
     connected = false;
+    /*
     if ((bcsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         return errno;
 
@@ -96,6 +97,18 @@ int netmesh::initBroadcastSocket(std::string addr)
 
     if (bind(bcsock, (const struct sockaddr *)&bcaddr, sizeof(bcaddr)) < 0)
         return errno;
+    */
+
+    bcsock.reset(new udp());
+
+    log << "Running initSocket";
+    bcsock->initSocket(BCPORT);
+
+    const int trueFlag = 1;
+    if (setsockopt(bcsock->topoll(0)->fd, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
+        return errno;
+
+    bcsock->bindaddr();
 
     connected = true;
     return 0;
@@ -179,24 +192,14 @@ std::string netmesh::returnDevices()
     return ss.str();
 }
 
-int netmesh::broadcastAlive()
-{
-    auto log = logobj->function("broadcastAlive");
-    std::string message = "++<" + myName;
-    int count = sendto(bcsock, message.c_str(), message.length() + 1, MSG_CONFIRM, (const struct sockaddr *)&bcaddr, sizeof(bcaddr));
-    if (count == -1)
-        std::cout << "oof" << std::endl;
-    return 0;
-}
-
-int netmesh::updateDeviceList()
+int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
 {
     auto log = logobj->function("updateDeviceList");
-    char *recvbuff = (char *)malloc(BUFFLEN),
-         *namebuff = (char *)malloc(BUFFLEN),
+    char *namebuff = (char *)malloc(BUFFLEN),
          *addrbuff = (char *)malloc(BUFFLEN);
-    while (1)
-    {
+    //while (1)
+    //{
+        /*
         sockaddr_in recvaddr;
         socklen_t recvaddrlen = sizeof(recvaddr);
         int count = recvfrom(bcsock, recvbuff, BUFFLEN, MSG_DONTWAIT, (sockaddr *)&recvaddr, &recvaddrlen);
@@ -204,8 +207,18 @@ int netmesh::updateDeviceList()
         {
             break;
         }
+        */
 
-        recvbuff[count] = '\0';
+        int nfds = poll(bcsock->topoll(POLLIN),1,timeout.count());
+        if (nfds < 1)
+            return 0;
+
+        auto resp = bcsock->recv();
+        int count = resp.length;
+        in_addr_t recvaddr = resp.addr;
+        const char *recvbuff = resp.raw;
+
+        //recvbuff[count] = '\0';
         sscanf(recvbuff, "++<%s", namebuff);
         std::string namestring = namebuff;
         if (namestring == myName)
@@ -214,13 +227,13 @@ int netmesh::updateDeviceList()
 
         if (devices.find(namestring) != devices.end())
         {
-            devices.at(namestring).address = recvaddr.sin_addr.s_addr;
+            devices.at(namestring).address = recvaddr;
             devices.at(namestring).timeout = settimeout;
         }
         else
         {
             device tempdev;
-            tempdev.address = recvaddr.sin_addr.s_addr;
+            tempdev.address = recvaddr;
             tempdev.timeout = settimeout;
 
             devices.insert(std::make_pair(namestring, tempdev));
@@ -228,7 +241,7 @@ int netmesh::updateDeviceList()
             std::cout << "Device Added!" << std::endl
                       << returnDevices();
         }
-    }
+    //}
 
     for (auto it = devices.cbegin(); it != devices.cend();)
     {
@@ -245,6 +258,36 @@ int netmesh::updateDeviceList()
         }
     }
 
+    return 1;
+}
+
+uint16_t netmesh::registerUDP(std::function<void(short int)> fn)
+{
+    auto log = logobj->function("registerUDP");
+    uint16_t port = findAvailablePort();
+
+    std::shared_ptr<ip> conn;
+    conn.reset(new udp());
+    conn->initSocket(port);
+
+    connection newconn;
+    newconn.connptr = conn;
+    connections.insert(std::make_pair(port,newconn));
+    return port;
+}
+
+int netmesh::broadcastAlive()
+{
+    auto log = logobj->function("broadcastAlive");
+    std::string message = "++<" + myName;
+
+    packet data;
+    data.raw = message.c_str();
+    data.length = message.length()+1;
+    data.addr = bcaddr.sin_addr.s_addr;
+
+    if (bcsock->send(data))
+        std::cout << "oof" << std::endl;
     return 0;
 }
 
@@ -262,22 +305,56 @@ int netmesh::checkforconn()
         int newfd = accept(listensock, (sockaddr *)&newaddr, &newaddrlen);
         for (auto &x : devices)
             name = (newaddr.sin_addr.s_addr == x.second.address) ? x.first : name;
-        connections.push_back({name, newfd});
+        //connections.push_back({name, newfd});
     }
     return 0;
+}
+
+uint16_t netmesh::findAvailablePort()
+{
+    uint16_t toreturn;
+    return toreturn;
+}
+
+void netmesh::pollAll(std::chrono::milliseconds timeout)
+{
+    int size = connections.size();
+    pollfd fds[size];
+    int i = 0;
+    for (auto &x : connections)
+    {
+        fds[i++] = *x.second.connptr->topoll(POLLIN);
+    }
+
+    int count = poll(fds,size,timeout.count());
+
+    auto it = connections.begin();
+    for (int j = 0; j < size; j++)
+    {
+        auto revent = fds[j].revents;
+        if (revent != 0)
+        {
+            it->second.callback(revent);
+        }
+
+        it++;
+    }
 }
 
 void netmesh::updateThread(netmesh *mynetmesh)
 {
     while (mynetmesh->isConnected())
     {
-        for (int i = 0; i < POLLCOUNT; ++i)
+        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
+        auto temptimeout = polltimeout;
+        while (mynetmesh->updateDeviceList(std::chrono::duration_cast<std::chrono::milliseconds>(temptimeout)))
         {
-            mynetmesh->updateDeviceList();
-            std::this_thread::sleep_for(std::chrono::milliseconds(POLLDELAY));
+            temptimeout = std::chrono::milliseconds(UPDATETIME) - (std::chrono::system_clock::now().time_since_epoch() - polltimeout);
         }
 
         if (mynetmesh->getBroadcastAlive())
             mynetmesh->broadcastAlive();
+
+        
     }
 }

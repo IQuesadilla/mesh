@@ -2,7 +2,13 @@
 
 int main (int argc, char **argv)
 {
-    netmesh *temp = new netmesh();
+    std::shared_ptr<logcpp> logobj;
+    logobj.reset(new logcpp());
+
+    auto log = logobj->function("main");
+
+    std::shared_ptr<netmesh> temp;
+    temp.reset(new netmesh(logobj));
 
     std::cout << "Log: Finding available meshes" << std::endl;
     auto avail = temp->findAvailableMeshes();
@@ -12,7 +18,7 @@ int main (int argc, char **argv)
         std::cout << n++ << ": " << x << std::endl;
     }
 
-        std::cin >> n;
+    std::cin >> n;
 
     std::cout << "Log: Selected " << avail[n] << std::endl;
 
@@ -34,5 +40,4 @@ int main (int argc, char **argv)
     }
 
     temp->killserver();
-    delete temp;
 }
