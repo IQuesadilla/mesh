@@ -214,6 +214,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
         }
         */
 
+        std::cout << "The VALUE " << int(timeout.count()) << std::endl;
         int nfds = poll(bcsock->topoll(POLLIN),1,timeout.count());
         if (nfds < 1)
             return 0;
