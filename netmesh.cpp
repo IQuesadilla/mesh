@@ -141,7 +141,6 @@ int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
 int netmesh::sendraw(std::string to, netdata *data)
 {
     auto log = logobj->function("sendraw");
-    std::cout << "Log: (sendraw)" << std::endl;
     std::cout << "Value: to: " << to << std::endl;
     if (devices.find(to) != devices.end())
     {

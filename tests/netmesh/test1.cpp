@@ -4,18 +4,21 @@ int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        std::cout << "Not enough arguments" << std::endl;
+        std::cerr << "Not enough arguments" << std::endl;
         return -1;
     }
 
-    std::cout << "Log: (main)" << std::endl;
-    std::cout << "Log: Creating sharedptr" << std::endl;
+    std::shared_ptr<logcpp> logobj;
+    logobj.reset(new logcpp());
+
+    auto log = logobj->function("main");
+    log << "Creating shared ptr";
     std::shared_ptr<netmesh> mesh1;
 
-    std::cout << "Log: Resetting with new netmesh object" << std::endl;
-    mesh1.reset(new netmesh());
+    log << "Resetting with new netmesh object";
+    mesh1.reset(new netmesh(logobj));
 
-    std::cout << "Log: Finding available meshes" << std::endl;
+    log << "Finding available meshes";
     auto avail = mesh1->findAvailableMeshes();
     int n = 0;
     for (auto x : avail)
@@ -26,23 +29,23 @@ int main(int argc, char *argv[])
     std::cin >> n;
     std::cout << "Log: Selected " << avail[n] << " mesh" << std::endl;
 
-    std::cout << "Log: Running init server with defaults" << std::endl;
+    log << "Running init server with defaults";
     mesh1->initserver(std::string(argv[1]), avail[n]);
 
-    std::cout << "Log: Delaying for 10s to allow for another device" << std::endl;
+    log << "Delaying for 10s to allow for another device";
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
     const std::string datastring = "Ayo! It works DAWGS! lfg";
     std::vector<char> datavec (datastring.begin(),datastring.end());
 
-    std::cout << "Log: Sending some data" << std::endl;
+    log << "Sending some data";
     mesh1->sendraw(argv[2],&datavec);
 
-    std::cout << "Log: Receiving some data" << std::endl;
+    log << "Receiving some data";
     mesh1->recvraw(argv[2],&datavec);
 
-    std::cout << "Log: Closing mesh" << std::endl;
+    log << "Closing mesh";
     mesh1->killserver();
 
-    std::cout << "Log: Finished" << std::endl;
+    log << "Finished";
 }
