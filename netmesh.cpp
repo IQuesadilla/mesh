@@ -105,6 +105,8 @@ int netmesh::initBroadcastSocket(std::string addr)
         return errno;
     */
 
+    bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
+
     bcsock.reset(new udp());
 
     log << "Running initSocket";
