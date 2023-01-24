@@ -85,7 +85,7 @@ private:
     int checkforconn();
     uint16_t findAvailablePort();
     void pollAll(std::chrono::milliseconds timeout);
-    static void updateThread(netmesh *mynetmesh);
+    friend void updateThread(netmesh *mynetmesh);
 
     struct device
     {

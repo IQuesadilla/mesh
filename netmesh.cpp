@@ -1,5 +1,27 @@
 #include "netmesh.h"
 
+void updateThread(netmesh *mynetmesh)
+{
+    auto log = mynetmesh->logobj->function("updateThread");
+    while (mynetmesh->isConnected())
+    {
+        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
+        auto temptimeout = std::chrono::milliseconds(UPDATETIME);
+        while (mynetmesh->updateDeviceList(temptimeout))
+        {
+            log << "here" << logcpp::loglevel::NOTE;
+            temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
+        }
+
+        if (mynetmesh->getBroadcastAlive())
+            mynetmesh->broadcastAlive();
+
+        
+    }
+}
+
+
+
 netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 {
     enableLogging(logptr);
@@ -66,7 +88,7 @@ std::vector<std::string> netmesh::findAvailableMeshes()
             continue;
 
         std::string tempbcaddr = inet_ntoa(((sockaddr_in*)ifa->ifa_ifu.ifu_broadaddr)->sin_addr);
-        //std::cout << "Log: Available mesh: " << tempbcaddr<< std::endl;
+        //log << "Available mesh: " << tempbcaddr << logcpp::loglevel::NOTE;
         to_return.push_back(tempbcaddr);
     }
 
@@ -109,7 +131,7 @@ int netmesh::initBroadcastSocket(std::string addr)
 
     bcsock.reset(new udp());
 
-    log << "Running initSocket";
+    log << "Running initSocket" << logcpp::loglevel::NOTE;
     bcsock->initSocket(BCPORT);
 
     const int trueFlag = 1;
@@ -155,7 +177,7 @@ bool netmesh::isConnected()
 int netmesh::sendraw(std::string to, netdata *data)
 {
     auto log = logobj->function("sendraw");
-    std::cout << "Value: to: " << to << std::endl;
+    log << "to: " << to << logcpp::loglevel::VALUE;
     if (devices.find(to) != devices.end())
     {
         packet temppack;
@@ -167,7 +189,7 @@ int netmesh::sendraw(std::string to, netdata *data)
     }
     else
     {
-        std::cout << "Warning: Tried to send data to invalid name" << std::endl;
+        log << "Tried to send data to invalid name" << logcpp::loglevel::WARNING;
     }
     return 0;
 }
@@ -175,8 +197,7 @@ int netmesh::sendraw(std::string to, netdata *data)
 int netmesh::recvraw(std::string from, netdata *data)
 {
     auto log = logobj->function("recvraw");
-    std::cout << "Log: (recvraw)" << std::endl;
-    std::cout << "Value: from: " << from << std::endl;
+    log << "from: " << from << logcpp::loglevel::VALUE;
     if (devices.find(from) != devices.end())
     {
         poll(sockGeneral->topoll(POLLIN),1,-1);
@@ -186,7 +207,7 @@ int netmesh::recvraw(std::string from, netdata *data)
     }
     else
     {
-        std::cout << "Warning: Tried to recv data from invalid name" << std::endl;
+        log << "Tried to recv data from invalid name" << logcpp::loglevel::WARNING;
     }
     return 0;
 }
@@ -196,11 +217,11 @@ std::string netmesh::returnDevices()
     auto log = logobj->function("returnDevices");
     std::stringstream ss;
 
-    ss << "Connected Devices: " << std::endl;
+    ss << "Connected Devices: " ;
     for (auto &x : devices)
         ss << "Name: " << x.first << std::endl
            << "  Address: " << x.second.address << std::endl
-           << "  Timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout).count() << std::endl;
+           << "  Timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout).count() ;
 
     return ss.str();
 }
@@ -222,10 +243,10 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
         }
         */
 
-        std::cout << "The VALUE " << int(timeout.count()) << std::endl;
+        log << "The VALUE " << int(timeout.count()) << logcpp::loglevel::VALUE;
         auto fds = bcsock->topoll(POLLIN);
         int nfds = poll(fds,1,int(timeout.count()));
-        std::cout << "fdval: " << fds->revents << std::endl;
+        log << "fdval: " << fds->revents << logcpp::loglevel::VALUE;
         if (nfds < 1)
             return 0;
 
@@ -237,7 +258,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
         //recvbuff[count] = '\0';
         sscanf(recvbuff, "++<%s", namebuff);
         std::string namestring = namebuff;
-        std::cout << "NAME " << namestring << std::endl;
+        log << "NAME " << namestring << logcpp::loglevel::VALUE;
         if (namestring == myName)
             return 1;
         auto settimeout = std::chrono::system_clock::now();
@@ -255,8 +276,8 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
 
             devices.insert(std::make_pair(namestring, tempdev));
 
-            std::cout << "Device Added!" << std::endl
-                      << returnDevices();
+            log << "Device Added!" << "\n"
+                      << returnDevices() << logcpp::loglevel::NOTE;
         }
     //}
 
@@ -264,10 +285,10 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
     {
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
         {
-            std::cout << "Log: Removing device from mesh" << std::endl;
-            std::cout << "Value: Device: " << it->first << std::endl;
+            log << "Removing device from mesh" << logcpp::loglevel::NOTE;
+            log << "Device: " << it->first << logcpp::loglevel::VALUE;
             devices.erase(it++);
-            std::cout << "Log: Successfully removed device from mesh" << std::endl;
+            log << "Successfully removed device from mesh" << logcpp::loglevel::NOTE;
         }
         else
         {
@@ -304,7 +325,7 @@ int netmesh::broadcastAlive()
     data.addr = bcaddr.sin_addr.s_addr;
 
     if (bcsock->send(data))
-        std::cout << "oof" << std::endl;
+        log << "oof" << logcpp::loglevel::NOTE;
     return 0;
 }
 
@@ -315,7 +336,7 @@ int netmesh::checkforconn()
     {
         if (errno == EWOULDBLOCK || errno == EAGAIN)
             return 0;
-        std::cout << "something fucked up " << errno << std::endl;
+        log << "something fucked up " << errno << logcpp::loglevel::VALUE;
         std::string name;
         sockaddr_in newaddr;
         socklen_t newaddrlen = sizeof(newaddr);
@@ -355,24 +376,5 @@ void netmesh::pollAll(std::chrono::milliseconds timeout)
         }
 
         it++;
-    }
-}
-
-void netmesh::updateThread(netmesh *mynetmesh)
-{
-    while (mynetmesh->isConnected())
-    {
-        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
-        auto temptimeout = std::chrono::milliseconds(UPDATETIME);
-        while (mynetmesh->updateDeviceList(temptimeout))
-        {
-            std::cout << "here" << std::endl;
-            temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
-        }
-
-        if (mynetmesh->getBroadcastAlive())
-            mynetmesh->broadcastAlive();
-
-        
     }
 }
