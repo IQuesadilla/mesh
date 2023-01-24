@@ -146,6 +146,12 @@ int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
     return 0;
 }
 
+bool netmesh::isConnected()
+{
+    auto log = logobj->function("isConnected");
+    return connected;
+}
+
 int netmesh::sendraw(std::string to, netdata *data)
 {
     auto log = logobj->function("sendraw");

@@ -61,7 +61,7 @@ public:
     int initBroadcastSocket(std::string addr);
     int initListenSocket(std::string myaddr = "0.0.0.0");
 
-    bool isConnected() { return connected; }
+    bool isConnected();
 
     int conntodevice(std::string devname);
 
