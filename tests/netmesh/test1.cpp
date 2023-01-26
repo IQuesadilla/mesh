@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
     log << "Receiving some data" << logcpp::loglevel::NOTE;
     mesh1->recvraw(argv[2],&datavec);
 
+    log << "datavec length: " << datavec.size() << logcpp::loglevel::VALUE;
+
     std::string recved (datavec.begin(),datavec.end());
     log << "Recv'd data length: " << recved.length() << logcpp::loglevel::VALUE;
     log << "Recv'd data: " << recved << logcpp::loglevel::VALUE;
