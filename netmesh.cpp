@@ -9,7 +9,9 @@ void updateThread(netmesh *mynetmesh)
         auto temptimeout = std::chrono::milliseconds(UPDATETIME);
         while (mynetmesh->updateDeviceList(temptimeout))
         {
-            log << "here" << logcpp::loglevel::NOTE;
+            if ( !mynetmesh->isConnected() )
+                return;
+                
             temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
         }
 
