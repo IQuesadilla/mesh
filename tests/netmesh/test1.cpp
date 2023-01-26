@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     log << "Delaying for 10s to allow for another device" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
-    const std::string datastring = "Ayo! It works DAWGS! lfg";
+    const std::string datastring = mesh1->getName() + " : Ayo! It works DAWGS! lfg";
     std::vector<char> datavec (datastring.begin(),datastring.end());
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
@@ -52,8 +52,6 @@ int main(int argc, char *argv[])
     log << "Recv'd data length: " << recved.length() << logcpp::loglevel::VALUE;
     log << "Recv'd data: " << recved << logcpp::loglevel::VALUE;
 
-    log << "Closing mesh" << logcpp::loglevel::NOTE;
-    mesh1->killserver();
-
     log << "Finished" << logcpp::loglevel::NOTE;
+    return 0;
 }

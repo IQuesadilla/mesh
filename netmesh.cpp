@@ -33,8 +33,11 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 
 netmesh::~netmesh()
 {
-    connected = false;
-    myUpdateThread.join();
+    auto log = logobj->function("~netmesh");
+    if (connected)
+    {
+        killserver();
+    }
 }
 
 int netmesh::initserver(std::string name, std::string mesh)
@@ -62,8 +65,12 @@ int netmesh::killserver()
 {
     auto log = logobj->function("killserver");
     connected = false;
-    if (getEnableUpdateThread())
+    if (myUpdateThread.joinable())
+    {
+        log << "Waiting until update thread finshes" << logcpp::loglevel::NOTE;
         myUpdateThread.join();
+    }
+
     return 0;
 }
 
