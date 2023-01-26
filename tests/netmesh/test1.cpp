@@ -41,14 +41,14 @@ int main(int argc, char *argv[])
     log << "Sending some data" << logcpp::loglevel::NOTE;
     mesh1->sendraw(argv[2],&datavec);
 
-    datavec.clear();
+    std::vector<char> recvdatavec;
 
     log << "Receiving some data" << logcpp::loglevel::NOTE;
-    mesh1->recvraw(argv[2],&datavec);
+    mesh1->recvraw(argv[2],&recvdatavec);
 
-    log << "datavec length: " << datavec.size() << logcpp::loglevel::VALUE;
+    log << "recvdatavec length: " << recvdatavec.size() << logcpp::loglevel::VALUE;
 
-    std::string recved (datavec.begin(),datavec.end());
+    std::string recved (recvdatavec.begin(),recvdatavec.end());
     log << "Recv'd data length: " << recved.length() << logcpp::loglevel::VALUE;
     log << "Recv'd data: " << recved << logcpp::loglevel::VALUE;
 
