@@ -41,8 +41,13 @@ int main(int argc, char *argv[])
     log << "Sending some data" << logcpp::loglevel::NOTE;
     mesh1->sendraw(argv[2],&datavec);
 
+    datavec.clear();
+
     log << "Receiving some data" << logcpp::loglevel::NOTE;
     mesh1->recvraw(argv[2],&datavec);
+
+    std::string recved (datavec.begin(),datavec.end());
+    log << "Recv'd data: " << recved << logcpp::loglevel::VALUE;
 
     log << "Closing mesh" << logcpp::loglevel::NOTE;
     mesh1->killserver();
