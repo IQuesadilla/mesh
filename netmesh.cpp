@@ -202,8 +202,8 @@ int netmesh::recvraw(std::string from, netdata *data)
     {
         poll(sockGeneral->topoll(POLLIN),1,-1);
         packet temppack = sockGeneral->recv();
-        data->resize(0);
-        data->insert(data->begin(),temppack.raw[0],temppack.raw[temppack.length]);
+        data->clear();
+        data->insert(data->begin(),&temppack.raw[0],&temppack.raw[temppack.length]);
     }
     else
     {
