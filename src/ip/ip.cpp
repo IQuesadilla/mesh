@@ -12,7 +12,7 @@ bool ip::send(const packet raw)
 {
     std::cout << "Log: (send)" << std::endl;
     std::cout << "Value: Length: " << raw.length << std::endl;
-    std::cout << "Value: Address: " << inet_ntoa( in_addr{toaddr} ) << std::endl;
+    std::cout << "Value: Address: " << inet_ntoa( in_addr{raw.addr} ) << std::endl;
     std::cout << "Value: Port: " << port << std::endl;
 
     sockaddr_in who;
