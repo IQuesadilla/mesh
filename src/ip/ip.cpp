@@ -50,6 +50,7 @@ const packet ip::recv()
     std::cout << "Value: From: " << inet_ntoa(fromaddr->sin_addr) << std::endl;
 
     toreturn.length = tempcount;
+    toreturn.addr = fromaddr->sin_addr.s_addr;
 
     return toreturn;
 }
