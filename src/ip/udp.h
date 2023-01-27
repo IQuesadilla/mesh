@@ -8,7 +8,8 @@
 class udp : public ip
 {
 public:
-    udp() {};
+    udp() { fd = -1; };
+    udp(uint port) { initSocket(port); }
 
     bool initSocket(uint setport);
 

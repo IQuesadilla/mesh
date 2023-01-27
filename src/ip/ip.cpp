@@ -40,17 +40,17 @@ const packet ip::recv()
 
     std::cout << "Log: Waiting for data to receive" << std::endl;
 
-    struct sockaddr_in *fromaddr = new struct sockaddr_in;
+    struct sockaddr_in fromaddr;
     socklen_t fromaddrlen;
 
-    int tempcount = recvfrom(fd,(void*)toreturn.raw,size,MSG_DONTWAIT,(struct sockaddr*)fromaddr,&fromaddrlen);
+    int tempcount = recvfrom(fd,(void*)toreturn.raw,size,MSG_DONTWAIT,(struct sockaddr*)&fromaddr,&fromaddrlen);
     std::cout << "Value: tempcount: " << tempcount << std::endl;
     std::cout << "Value: errno: " << errno << std::endl;
     std::cout << "Value: fd: " << fd << std::endl;
-    std::cout << "Value: From: " << inet_ntoa(fromaddr->sin_addr) << std::endl;
+    std::cout << "Value: From: " << inet_ntoa(fromaddr.sin_addr) << std::endl;
 
     toreturn.length = tempcount;
-    toreturn.addr = fromaddr->sin_addr.s_addr;
+    toreturn.addr = fromaddr.sin_addr.s_addr;
 
     return toreturn;
 }

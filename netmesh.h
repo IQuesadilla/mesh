@@ -33,8 +33,6 @@
 #define POLLDELAY 50
 #define UPDATETIME 2000
 #define TIMEOUTTIME 10000
-#define BUFFLEN 2000
-#define MAXNAMELEN 20
 
 #define AFREQ 56320
 #define AFORMAT AUDIO_S32MSB
@@ -59,7 +57,7 @@ public:
 
     int initUpdateThread();
     int initBroadcastSocket(std::string addr);
-    int initListenSocket(std::string myaddr = "0.0.0.0");
+    //int initListenSocket(std::string myaddr = "0.0.0.0");
 
     bool isConnected();
 
@@ -71,7 +69,7 @@ public:
     std::string returnDevices();
     int updateDeviceList(std::chrono::milliseconds timeout);
 
-    uint16_t registerUDP(std::function<void(short int)> fn);
+    uint16_t registerUDP(std::string servname, std::function<void(char*,int)> fn);
 
     bool getBroadcastAlive() { return flags.broadcastalive; }
     bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
@@ -87,18 +85,23 @@ private:
     void pollAll(std::chrono::milliseconds timeout);
     friend void updateThread(netmesh *mynetmesh);
 
+    struct service
+    {
+        uint16_t sock;
+    };
+
     struct device
     {
         in_addr_t address;
-        // std::shared_ptr<ip> devconn;
         std::chrono::_V2::system_clock::time_point timeout;
+        std::map<std::string,service> services;
     };
 
-    struct connection
+    struct myservice
     {
-        std::string devname;
+        std::string name;
         std::shared_ptr<ip> connptr;
-        std::function<void(short int)> callback;
+        std::function<void(char*,int)> callback;
     };
 
     struct
@@ -107,14 +110,14 @@ private:
         bool enableupdatethread;
     } flags;
 
-    int listensock, udpsock; // TODO Initialize udpsock
+    //int listensock; // TODO Initialize udpsock
     std::shared_ptr<udp> bcsock;
     std::chrono::_V2::system_clock::time_point last_update;
     std::string myName;
     bool connected;
     sockaddr_in bcaddr;
     std::map<std::string, device> devices;
-    std::map<uint16_t,connection> connections;
+    std::map<uint16_t,myservice> myservices;
     std::thread myUpdateThread;
     std::shared_ptr<udp> sockGeneral;
     std::shared_ptr<logcpp> logobj;

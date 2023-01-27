@@ -116,25 +116,6 @@ int netmesh::initBroadcastSocket(std::string addr)
 {
     auto log = logobj->function("initBroadcastSocket");
     connected = false;
-    /*
-    if ((bcsock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-        return errno;
-
-    const int trueFlag = 1;
-    if (setsockopt(bcsock, SOL_SOCKET, SO_REUSEADDR, &trueFlag, sizeof(trueFlag)) < 0)
-        return errno;
-    if (setsockopt(bcsock, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
-        return errno;
-
-    memset(&bcaddr, '\0', sizeof(bcaddr));
-
-    bcaddr.sin_family = AF_INET;
-    bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
-    bcaddr.sin_port = htons(BCPORT);
-
-    if (bind(bcsock, (const struct sockaddr *)&bcaddr, sizeof(bcaddr)) < 0)
-        return errno;
-    */
 
     bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
 
@@ -153,7 +134,8 @@ int netmesh::initBroadcastSocket(std::string addr)
     return 0;
 }
 
-int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
+/*
+int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*)
 {
     auto log = logobj->function("initListenSocket");
     if ((listensock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -176,6 +158,7 @@ int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*/)
         return errno;
     return 0;
 }
+*/
 
 bool netmesh::isConnected()
 {
@@ -238,57 +221,45 @@ std::string netmesh::returnDevices()
 int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
 {
     auto log = logobj->function("updateDeviceList");
-    char *namebuff = (char *)malloc(BUFFLEN),
-         *addrbuff = (char *)malloc(BUFFLEN);
-    //while (1)
-    //{
-        /*
-        sockaddr_in recvaddr;
-        socklen_t recvaddrlen = sizeof(recvaddr);
-        int count = recvfrom(bcsock, recvbuff, BUFFLEN, MSG_DONTWAIT, (sockaddr *)&recvaddr, &recvaddrlen);
-        if (count == -1)
-        {
-            break;
-        }
-        */
 
-        log << "The VALUE " << int(timeout.count()) << logcpp::loglevel::VALUE;
-        auto fds = bcsock->topoll(POLLIN);
-        int nfds = poll(fds,1,int(timeout.count()));
-        log << "fdval: " << fds->revents << logcpp::loglevel::VALUE;
-        if (nfds < 1)
-            return 0;
+    log << "The VALUE " << int(timeout.count()) << logcpp::loglevel::VALUE;
+    auto fds = bcsock->topoll(POLLIN);
+    int nfds = poll(fds,1,int(timeout.count()));
+    log << "fdval: " << fds->revents << logcpp::loglevel::VALUE;
+    if (nfds < 1)
+        return 0;
 
-        auto resp = bcsock->recv();
-        int count = resp.length;
-        in_addr_t recvaddr = resp.addr;
-        const char *recvbuff = resp.raw;
+    auto resp = bcsock->recv();
+    int count = resp.length;
+    in_addr_t recvaddr = resp.addr;
+    const char *recvbuff = resp.raw;
 
-        //recvbuff[count] = '\0';
-        sscanf(recvbuff, "++<%s", namebuff);
-        std::string namestring = namebuff;
-        log << "NAME " << namestring << logcpp::loglevel::VALUE;
-        if (namestring == myName)
-            return 1;
-        auto settimeout = std::chrono::system_clock::now();
+    char *namebuff = (char *)malloc(count);
 
-        if (devices.find(namestring) != devices.end())
-        {
-            devices.at(namestring).address = recvaddr;
-            devices.at(namestring).timeout = settimeout;
-        }
-        else
-        {
-            device tempdev;
-            tempdev.address = recvaddr;
-            tempdev.timeout = settimeout;
+    //recvbuff[count] = '\0';
+    sscanf(recvbuff, "++<%s", namebuff);
+    std::string namestring = namebuff;
+    log << "NAME " << namestring << logcpp::loglevel::VALUE;
+    if (namestring == myName)
+        return 1;
+    auto settimeout = std::chrono::system_clock::now();
 
-            devices.insert(std::make_pair(namestring, tempdev));
+    if (devices.find(namestring) != devices.end())
+    {
+        devices.at(namestring).address = recvaddr;
+        devices.at(namestring).timeout = settimeout;
+    }
+    else
+    {
+        device tempdev;
+        tempdev.address = recvaddr;
+        tempdev.timeout = settimeout;
 
-            log << "Device Added!" << "\n"
-                      << returnDevices() << logcpp::loglevel::NOTE;
-        }
-    //}
+        devices.insert(std::make_pair(namestring, tempdev));
+
+        log << "Device Added!" << "\n"
+                    << returnDevices() << logcpp::loglevel::NOTE;
+    }
 
     for (auto it = devices.cbegin(); it != devices.cend();)
     {
@@ -308,18 +279,20 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
     return 1;
 }
 
-uint16_t netmesh::registerUDP(std::function<void(short int)> fn)
+uint16_t netmesh::registerUDP(std::string servname, std::function<void(char*,int)> fn)
 {
     auto log = logobj->function("registerUDP");
     uint16_t port = findAvailablePort();
 
-    std::shared_ptr<ip> conn;
-    conn.reset(new udp());
-    conn->initSocket(port);
+    std::shared_ptr<udp> conn;
+    conn.reset(new udp(port));
+    conn->bindaddr();
 
-    connection newconn;
+    myservice newconn;
+    newconn.name = servname;
     newconn.connptr = conn;
-    connections.insert(std::make_pair(port,newconn));
+    newconn.callback = fn;
+    myservices.insert(std::make_pair(port,newconn));
     return port;
 }
 
@@ -338,6 +311,7 @@ int netmesh::broadcastAlive()
     return 0;
 }
 
+/*
 int netmesh::checkforconn()
 {
     auto log = logobj->function("checkforconn");
@@ -352,10 +326,11 @@ int netmesh::checkforconn()
         int newfd = accept(listensock, (sockaddr *)&newaddr, &newaddrlen);
         for (auto &x : devices)
             name = (newaddr.sin_addr.s_addr == x.second.address) ? x.first : name;
-        //connections.push_back({name, newfd});
+        //myservices.push_back({name, newfd});
     }
     return 0;
 }
+*/
 
 uint16_t netmesh::findAvailablePort()
 {
@@ -365,23 +340,23 @@ uint16_t netmesh::findAvailablePort()
 
 void netmesh::pollAll(std::chrono::milliseconds timeout)
 {
-    int size = connections.size();
+    int size = myservices.size();
     pollfd fds[size];
     int i = 0;
-    for (auto &x : connections)
+    for (auto &x : myservices)
     {
         fds[i++] = *x.second.connptr->topoll(POLLIN);
     }
 
     int count = poll(fds,size,timeout.count());
 
-    auto it = connections.begin();
+    auto it = myservices.begin();
     for (int j = 0; j < size; j++)
     {
         auto revent = fds[j].revents;
         if (revent != 0)
         {
-            it->second.callback(revent);
+            //it->second.callback(revent); // Add recv support and pass data as param
         }
 
         it++;

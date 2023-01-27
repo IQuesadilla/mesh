@@ -21,8 +21,8 @@ struct packet
 class ip
 {
 public:
-    ip() { fd = -1; }
-    ip(uint port) { initSocket(port); }
+    //ip() { fd = -1; }
+    //ip(uint port) { initSocket(port); }
     ~ip() { close(fd); }
 
     virtual bool initSocket(uint port) = 0;
