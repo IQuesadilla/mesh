@@ -299,11 +299,11 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(char*,int
 int netmesh::broadcastAlive()
 {
     auto log = logobj->function("broadcastAlive");
-    std::string message = "++<" + myName;
+    tinyxml2::XMLPrinter *print = generateUpdate();
 
     packet data;
-    data.raw = message.c_str();
-    data.length = message.length()+1;
+    data.raw = print->CStr();
+    data.length = print->CStrSize()+1;
     data.addr = bcaddr.sin_addr.s_addr;
 
     if (bcsock->send(data))
