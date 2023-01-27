@@ -44,6 +44,11 @@ class netmesh
 {
 public:
     typedef std::vector<char> netdata;
+    enum iptype
+    {
+        UDP,
+        TCP
+    };
 
     netmesh(std::shared_ptr<logcpp> log);
     ~netmesh();
@@ -79,15 +84,10 @@ public:
     std::string setName(std::string in) { return (myName = in); }
 
 private:
-    int broadcastAlive();
-    int checkforconn();
-    uint16_t findAvailablePort();
-    void pollAll(std::chrono::milliseconds timeout);
-    friend void updateThread(netmesh *mynetmesh);
-
     struct service
     {
-        uint16_t sock;
+        uint16_t port;
+        iptype ip;
     };
 
     struct device
@@ -104,11 +104,22 @@ private:
         std::function<void(char*,int)> callback;
     };
 
+
+    int broadcastAlive();
+    
+    std::pair<std::string,device> parseUpdate(const char *xml);
+    tinyxml2::XMLPrinter *generateUpdate(std::map<std::string,service> services);
+    //int checkforconn();
+    uint16_t findAvailablePort();
+    void pollAll(std::chrono::milliseconds timeout);
+    friend void updateThread(netmesh *mynetmesh);
+
     struct
     {
         bool broadcastalive;
         bool enableupdatethread;
     } flags;
+
 
     //int listensock; // TODO Initialize udpsock
     std::shared_ptr<udp> bcsock;

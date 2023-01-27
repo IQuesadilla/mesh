@@ -311,6 +311,79 @@ int netmesh::broadcastAlive()
     return 0;
 }
 
+std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
+{
+    device toreturn;
+    tinyxml2::XMLDocument doc;
+    doc.Parse(xml);
+
+    tinyxml2::XMLElement *dev = doc.RootElement();
+    std::string devname = dev->FindAttribute("name")->Value();
+    //toreturn.timeout = std::chrono::milliseconds( dev->FindAttribute("timeout")->IntValue() );
+
+    auto serv = dev->FirstChildElement("serv");
+    if ( serv )
+        do
+        {
+            std::pair<std::string,service> tempserv;
+            tempserv.first = serv->FindAttribute("name")->Value();
+            tempserv.second.port = serv->FindAttribute("port")->IntValue();
+
+            auto tempiptype = std::string(serv->FindAttribute("ip")->Value());
+            if (tempiptype == "udp")
+                tempserv.second.ip = iptype::UDP;
+            else if (tempiptype == "tcp")
+                tempserv.second.ip = iptype::TCP;
+            else
+                std::cerr << "Incorrect ip type" << std::endl;
+
+            toreturn.services.insert(tempserv);
+        }
+        while ( serv = serv->NextSiblingElement("serv") );
+    
+    std::cout << "Device Name: " << devname << std::endl;
+    //std::cout << "Device Timeout: " << toreturn.timeout << std::endl;
+
+    for (auto &x : toreturn.services)
+    {
+        std::cout << std::endl;
+        std::cout << "Service Name: " << x.first << std::endl;
+        std::cout << "Service Port: " << x.second.port << std::endl;
+        std::cout << "Service IP: " << x.second.ip << std::endl;
+    }
+
+    return std::make_pair(devname,toreturn);
+}
+
+tinyxml2::XMLPrinter *netmesh::generateUpdate(std::map<std::string,service> services)
+{
+    tinyxml2::XMLDocument doc;
+    auto dev = doc.NewElement("dev");
+    dev->SetAttribute("name",myName.c_str());
+    dev->SetAttribute("timeout",TIMEOUTTIME);
+    doc.InsertFirstChild(dev);
+ 
+    services.insert( std::make_pair("serv1", (service){2000, iptype::UDP} ) );
+    services.insert( std::make_pair("serv2", (service){2001, iptype::TCP} ) );
+
+    for (auto &x : services)
+    {
+        auto serv = dev->InsertNewChildElement("serv");
+        serv->SetAttribute("name",x.first.c_str());
+        serv->SetAttribute("port",x.second.port);
+        if (x.second.ip == iptype::UDP)
+            serv->SetAttribute("ip","udp");
+        else if (x.second.ip == iptype::TCP)
+            serv->SetAttribute("ip","tcp");
+        else
+            std::cerr << "wtf is happening: " << x.second.ip << std::endl;
+    }
+
+    tinyxml2::XMLPrinter *print = new tinyxml2::XMLPrinter(0,true);
+    doc.Print( print );
+    return print;
+}
+
 /*
 int netmesh::checkforconn()
 {
