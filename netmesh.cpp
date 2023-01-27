@@ -313,6 +313,8 @@ int netmesh::broadcastAlive()
 
 std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
 {
+    auto log = logobj->function("parseUpdate");
+
     device toreturn;
     tinyxml2::XMLDocument doc;
     doc.Parse(xml);
@@ -331,52 +333,50 @@ std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
 
             auto tempiptype = std::string(serv->FindAttribute("ip")->Value());
             if (tempiptype == "udp")
-                tempserv.second.ip = iptype::UDP;
+                tempserv.second.ipt = iptype::UDP;
             else if (tempiptype == "tcp")
-                tempserv.second.ip = iptype::TCP;
+                tempserv.second.ipt = iptype::TCP;
             else
-                std::cerr << "Incorrect ip type" << std::endl;
+                log << "Invalid IP Type: " << tempserv.second.ipt << logcpp::loglevel::ERROR;
 
             toreturn.services.insert(tempserv);
         }
         while ( serv = serv->NextSiblingElement("serv") );
     
-    std::cout << "Device Name: " << devname << std::endl;
-    //std::cout << "Device Timeout: " << toreturn.timeout << std::endl;
+    log << "Device Name: " << devname << logcpp::loglevel::VALUE;
+    //log << "Device Timeout: " << toreturn.timeout << std::endl;
 
     for (auto &x : toreturn.services)
     {
-        std::cout << std::endl;
-        std::cout << "Service Name: " << x.first << std::endl;
-        std::cout << "Service Port: " << x.second.port << std::endl;
-        std::cout << "Service IP: " << x.second.ip << std::endl;
+        log << "Service Name: " << x.first << logcpp::loglevel::VALUE;
+        log << "Service Port: " << x.second.port << logcpp::loglevel::VALUE;
+        log << "Service IP: " << x.second.ipt << logcpp::loglevel::VALUE;
     }
 
     return std::make_pair(devname,toreturn);
 }
 
-tinyxml2::XMLPrinter *netmesh::generateUpdate(std::map<std::string,service> services)
+tinyxml2::XMLPrinter *netmesh::generateUpdate()
 {
+    auto log = logobj->function("generateUpdate");
+
     tinyxml2::XMLDocument doc;
     auto dev = doc.NewElement("dev");
     dev->SetAttribute("name",myName.c_str());
     dev->SetAttribute("timeout",TIMEOUTTIME);
     doc.InsertFirstChild(dev);
- 
-    services.insert( std::make_pair("serv1", (service){2000, iptype::UDP} ) );
-    services.insert( std::make_pair("serv2", (service){2001, iptype::TCP} ) );
 
-    for (auto &x : services)
+    for (auto &x : myservices)
     {
         auto serv = dev->InsertNewChildElement("serv");
-        serv->SetAttribute("name",x.first.c_str());
-        serv->SetAttribute("port",x.second.port);
-        if (x.second.ip == iptype::UDP)
+        serv->SetAttribute("name",x.second.name.c_str());
+        serv->SetAttribute("port",x.first);
+        if (x.second.ipt == iptype::UDP)
             serv->SetAttribute("ip","udp");
-        else if (x.second.ip == iptype::TCP)
+        else if (x.second.ipt == iptype::TCP)
             serv->SetAttribute("ip","tcp");
         else
-            std::cerr << "wtf is happening: " << x.second.ip << std::endl;
+            log << "Invalid IP Type: " << x.second.ipt << logcpp::loglevel::ERROR;
     }
 
     tinyxml2::XMLPrinter *print = new tinyxml2::XMLPrinter(0,true);

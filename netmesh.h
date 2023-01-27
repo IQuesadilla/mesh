@@ -87,7 +87,7 @@ private:
     struct service
     {
         uint16_t port;
-        iptype ip;
+        iptype ipt;
     };
 
     struct device
@@ -100,6 +100,7 @@ private:
     struct myservice
     {
         std::string name;
+        iptype ipt;
         std::shared_ptr<ip> connptr;
         std::function<void(char*,int)> callback;
     };
@@ -108,7 +109,7 @@ private:
     int broadcastAlive();
     
     std::pair<std::string,device> parseUpdate(const char *xml);
-    tinyxml2::XMLPrinter *generateUpdate(std::map<std::string,service> services);
+    tinyxml2::XMLPrinter *generateUpdate();
     //int checkforconn();
     uint16_t findAvailablePort();
     void pollAll(std::chrono::milliseconds timeout);
