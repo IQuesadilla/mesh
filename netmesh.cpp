@@ -231,35 +231,24 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
 
     auto resp = bcsock->recv();
     int count = resp.length;
-    in_addr_t recvaddr = resp.addr;
-    const char *recvbuff = resp.raw;
+    auto dev = parseUpdate(resp.raw);
 
-    char *namebuff = (char *)malloc(count);
-
-    //recvbuff[count] = '\0';
-    sscanf(recvbuff, "++<%s", namebuff);
-    std::string namestring = namebuff;
-    log << "NAME " << namestring << logcpp::loglevel::VALUE;
-    if (namestring == myName)
+    log << "NAME " << dev.first << logcpp::loglevel::VALUE;
+    if (dev.first == myName)
         return 1;
     auto settimeout = std::chrono::system_clock::now();
 
-    if (devices.find(namestring) != devices.end())
+    bool newdev = false;
+    if (devices.find(dev.first) != devices.end())
     {
-        devices.at(namestring).address = recvaddr;
-        devices.at(namestring).timeout = settimeout;
+        newdev = true;
     }
-    else
-    {
-        device tempdev;
-        tempdev.address = recvaddr;
-        tempdev.timeout = settimeout;
+    
+    devices[dev.first] = dev.second;
 
-        devices.insert(std::make_pair(namestring, tempdev));
-
+    if (newdev)
         log << "Device Added!" << "\n"
                     << returnDevices() << logcpp::loglevel::NOTE;
-    }
 
     for (auto it = devices.cbegin(); it != devices.cend();)
     {
