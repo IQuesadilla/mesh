@@ -244,6 +244,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
         newdev = true;
     }
     
+    dev.second.address = resp.addr;
     devices[dev.first] = dev.second;
 
     if (newdev)
