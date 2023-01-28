@@ -266,7 +266,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
     }
 
     return 1;
-}
+} 
 
 uint16_t netmesh::registerUDP(std::string servname, std::function<void(char*,int)> fn)
 {
@@ -305,6 +305,8 @@ std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
     auto log = logobj->function("parseUpdate");
 
     device toreturn;
+    toreturn.timeout = std::chrono::system_clock::now();
+    
     tinyxml2::XMLDocument doc;
     doc.Parse(xml);
 
