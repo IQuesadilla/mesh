@@ -239,7 +239,7 @@ int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
     auto settimeout = std::chrono::system_clock::now();
 
     bool newdev = false;
-    if (devices.find(dev.first) != devices.end())
+    if (devices.find(dev.first) == devices.end())
     {
         newdev = true;
     }
@@ -306,7 +306,7 @@ std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
 
     device toreturn;
     toreturn.timeout = std::chrono::system_clock::now();
-    
+
     tinyxml2::XMLDocument doc;
     doc.Parse(xml);
 
