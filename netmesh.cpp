@@ -459,11 +459,11 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         --count;
     }
 
-    log << "DATA WAS RECIEVED FROM SOMETHING OTHER THAN UPDATEDEVICELIST!!! =====" << logcpp::loglevel::NOTE;
-
     auto it = myservices.begin();
-    for (int j = 1; j < size && count > 0; j++)
+    for (int j = 0; j < size && count > 0; j++)
     {
+        log << "DATA WAS RECIEVED FROM SOMETHING OTHER THAN UPDATEDEVICELIST!!! =====" << logcpp::loglevel::NOTE;
+
         auto revent = fds[j].revents;
         if (revent != 0)
         {
