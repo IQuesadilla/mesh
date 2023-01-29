@@ -4,7 +4,7 @@ void mycallback(std::string name,netmesh::netdata* data)
 {
     std::cout << "Running the callback" << std::endl;
     std::cout << "Name: " << name << std::endl;
-    std::cout << "Length: " << data->size();
+    std::cout << "Length: " << data->size() << std::endl;
     std::cout << "Data: " << std::string(data->begin(),data->end()) << std::endl;
 }
 
