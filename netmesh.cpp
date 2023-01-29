@@ -443,6 +443,8 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         fds[i++] = *x.second.connptr->topoll(POLLIN);
     }
 
+    log << "Num of Services: " << size << logcpp::loglevel::VALUE;
+
     int count = poll(fds,size,timeout.count());
     log << "Polled Count: " << count << logcpp::loglevel::VALUE;
 
