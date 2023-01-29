@@ -72,7 +72,7 @@ public:
     int recvraw(std::string from, netdata *data);
 
     std::string returnDevices();
-    int updateDeviceList(std::chrono::milliseconds timeout);
+    int updateDeviceList();
 
     uint16_t registerUDP(std::string servname, std::function<void(char*,int)> fn);
 
@@ -112,7 +112,7 @@ private:
     tinyxml2::XMLPrinter *generateUpdate();
     //int checkforconn();
     uint16_t findAvailablePort();
-    void pollAll(std::chrono::milliseconds timeout);
+    bool pollAll(std::chrono::milliseconds timeout);
     friend void updateThread(netmesh *mynetmesh);
 
     struct

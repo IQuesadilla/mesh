@@ -7,7 +7,7 @@ void updateThread(netmesh *mynetmesh)
     {
         auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
         auto temptimeout = std::chrono::milliseconds(UPDATETIME);
-        while (mynetmesh->updateDeviceList(temptimeout))
+        while (mynetmesh->pollAll(temptimeout))
         {
             if ( !mynetmesh->isConnected() )
                 return;
@@ -218,16 +218,9 @@ std::string netmesh::returnDevices()
     return ss.str();
 }
 
-int netmesh::updateDeviceList(std::chrono::milliseconds timeout)
+int netmesh::updateDeviceList()
 {
     auto log = logobj->function("updateDeviceList");
-
-    log << "The VALUE " << int(timeout.count()) << logcpp::loglevel::VALUE;
-    auto fds = bcsock->topoll(POLLIN);
-    int nfds = poll(fds,1,int(timeout.count()));
-    log << "fdval: " << fds->revents << logcpp::loglevel::VALUE;
-    if (nfds < 1)
-        return 0;
 
     auto resp = bcsock->recv();
     int count = resp.length;
@@ -403,20 +396,29 @@ uint16_t netmesh::findAvailablePort()
     return toreturn;
 }
 
-void netmesh::pollAll(std::chrono::milliseconds timeout)
+bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
     int size = myservices.size();
-    pollfd fds[size];
+    pollfd fds[size+1];
+
+    fds[0] = *bcsock->topoll(POLLIN);
+
     int i = 0;
     for (auto &x : myservices)
     {
-        fds[i++] = *x.second.connptr->topoll(POLLIN);
+        fds[++i] = *x.second.connptr->topoll(POLLIN);
     }
 
     int count = poll(fds,size,timeout.count());
 
+    if (fds[0].revents == POLLIN)
+    {
+        updateDeviceList();
+        --count;
+    }
+
     auto it = myservices.begin();
-    for (int j = 0; j < size; j++)
+    for (int j = 1; j < size; j++)
     {
         auto revent = fds[j].revents;
         if (revent != 0)
