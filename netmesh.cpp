@@ -30,7 +30,7 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 
     auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
-    setEnableUpdateThread(true);
+    setEnableUpdateThread(false);
 }
 
 netmesh::~netmesh()

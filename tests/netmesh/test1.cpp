@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
 
     mesh1->registerUDP("serv1",mycallback);
 
+    std::thread mythread (netmesh::run,mesh1.get());
+
     log << "Delaying for 10s to allow for another device" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
@@ -53,6 +55,9 @@ int main(int argc, char *argv[])
 
     log << "Delaying for 10s to give time for other to send" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+    mesh1->killserver();
+    mythread.join();
 
     return 0;
 }

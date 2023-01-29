@@ -85,6 +85,8 @@ public:
     std::string getName() { return myName; }
     std::string setName(std::string in) { return (myName = in); }
 
+    static void run(netmesh *mynetmesh) { updateThread(mynetmesh); };
+
 private:
     struct service
     {
