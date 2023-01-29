@@ -24,21 +24,20 @@
 #include "src/ip/udp.h"
 #include "logcpp/logcpp.h"
 
-#define BCADDR "192.168.123.255"
-
 #define BCPORT 1999
 #define TCPPORT 1998
-#define UDPPORT 1997
-#define DEVICE_TIMEOUT 1000
-#define POLLDELAY 50
 #define UPDATETIME 2000
 #define TIMEOUTTIME 10000
 
-#define AFREQ 56320
-#define AFORMAT AUDIO_S32MSB
-#define ACHANNELS 2
-#define ASAMPLES 64
-#define POLLCOUNT UPDATETIME / POLLDELAY
+/*
+    TODO: Add proper logging to ip classes
+    TODO: Build out a larger protocol
+        - Request mesh info, anyone answers
+        - Broadcast internal value update
+            - Update time
+            - Timeout time
+        - Leaving the mesh
+*/
 
 class netmesh
 {
@@ -60,16 +59,10 @@ public:
 
     std::vector<std::string> findAvailableMeshes();
 
-    int initUpdateThread();
     int initBroadcastSocket(std::string addr);
     //int initListenSocket(std::string myaddr = "0.0.0.0");
 
     bool isConnected();
-
-    int conntodevice(std::string devname);
-
-    int sendraw(std::string to, netdata *data);
-    int recvraw(std::string from, netdata *data);
 
     int serviceSend(std::string devname, std::string servname, netdata *data);
 
@@ -80,12 +73,10 @@ public:
 
     bool getBroadcastAlive() { return flags.broadcastalive; }
     bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
-    bool getEnableUpdateThread() { return flags.enableupdatethread; }
-    bool setEnableUpdateThread(bool in) { return (flags.enableupdatethread = in); }
     std::string getName() { return myName; }
     std::string setName(std::string in) { return (myName = in); }
 
-    static void run(netmesh *mynetmesh) { updateThread(mynetmesh); };
+    static void run(netmesh *mynetmesh) { mynetmesh->updateThread(); };
 
 private:
     struct service
@@ -117,12 +108,11 @@ private:
     //int checkforconn();
     uint16_t findAvailablePort();
     bool pollAll(std::chrono::milliseconds timeout);
-    friend void updateThread(netmesh *mynetmesh);
+    void updateThread();
 
     struct
     {
         bool broadcastalive;
-        bool enableupdatethread;
     } flags;
 
 
@@ -134,7 +124,6 @@ private:
     sockaddr_in bcaddr;
     std::map<std::string, device> devices;
     std::map<uint16_t,myservice> myservices;
-    std::thread myUpdateThread;
     std::shared_ptr<udp> sockGeneral;
     std::shared_ptr<logcpp> logobj;
 };

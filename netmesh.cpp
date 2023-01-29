@@ -1,24 +1,22 @@
 #include "netmesh.h"
 
-void updateThread(netmesh *mynetmesh)
+void netmesh::updateThread()
 {
-    auto log = mynetmesh->logobj->function("updateThread");
-    while (mynetmesh->isConnected())
+    auto log = logobj->function("updateThread");
+    while (isConnected())
     {
         auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
         auto temptimeout = std::chrono::milliseconds(UPDATETIME);
-        while (mynetmesh->pollAll(temptimeout))
+        while (pollAll(temptimeout))
         {
-            if ( !mynetmesh->isConnected() )
+            if ( !isConnected() )
                 return;
                 
             temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
         }
 
-        if (mynetmesh->getBroadcastAlive())
-            mynetmesh->broadcastAlive();
-
-        
+        if (getBroadcastAlive())
+            broadcastAlive();
     }
 }
 
@@ -30,7 +28,6 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 
     auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
-    setEnableUpdateThread(false);
 }
 
 netmesh::~netmesh()
@@ -53,13 +50,12 @@ int netmesh::initserver(std::string name, std::string mesh)
     initBroadcastSocket(mesh);
 
     sockGeneral.reset(new udp());
-    sockGeneral->initSocket(UDPPORT);
+    sockGeneral->initSocket(0);
     //sockGeneral->bindaddr();
 
     myName = name;
     connected = true;
-    if (getEnableUpdateThread())
-        initUpdateThread();
+
     return 0;
 }
 
@@ -67,11 +63,6 @@ int netmesh::killserver()
 {
     auto log = logobj->function("killserver");
     connected = false;
-    if (myUpdateThread.joinable())
-    {
-        log << "Waiting until update thread finshes" << logcpp::loglevel::NOTE;
-        myUpdateThread.join();
-    }
 
     return 0;
 }
@@ -102,14 +93,6 @@ std::vector<std::string> netmesh::findAvailableMeshes()
     }
 
     return to_return;
-}
-
-int netmesh::initUpdateThread()
-{
-    auto log = logobj->function("initUpdateThread");
-    myUpdateThread = std::thread(updateThread, this);
-    setEnableUpdateThread(true);
-    return 0;
 }
 
 int netmesh::initBroadcastSocket(std::string addr)
@@ -164,44 +147,6 @@ bool netmesh::isConnected()
 {
     auto log = logobj->function("isConnected");
     return connected;
-}
-
-int netmesh::sendraw(std::string to, netdata *data)
-{
-    auto log = logobj->function("sendraw");
-    log << "to: " << to << logcpp::loglevel::VALUE;
-    if (devices.find(to) != devices.end())
-    {
-        packet temppack;
-        temppack.addr = devices.at(to).address;
-        temppack.raw = data->data();
-        temppack.length = data->size();
-
-        sockGeneral->send(temppack);
-    }
-    else
-    {
-        log << "Tried to send data to invalid name" << logcpp::loglevel::WARNING;
-    }
-    return 0;
-}
-
-int netmesh::recvraw(std::string from, netdata *data)
-{
-    auto log = logobj->function("recvraw");
-    log << "from: " << from << logcpp::loglevel::VALUE;
-    if (devices.find(from) != devices.end())
-    {
-        poll(sockGeneral->topoll(POLLIN),1,-1);
-        packet temppack = sockGeneral->recv();
-        data->clear();
-        data->insert(data->begin(),&temppack.raw[0],&temppack.raw[temppack.length]);
-    }
-    else
-    {
-        log << "Tried to recv data from invalid name" << logcpp::loglevel::WARNING;
-    }
-    return 0;
 }
 
 int netmesh::serviceSend(std::string devname, std::string servname, netdata *data)
