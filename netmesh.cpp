@@ -54,7 +54,7 @@ int netmesh::initserver(std::string name, std::string mesh)
 
     sockGeneral.reset(new udp());
     sockGeneral->initSocket(UDPPORT);
-    sockGeneral->bindaddr();
+    //sockGeneral->bindaddr();
 
     myName = name;
     connected = true;
@@ -204,6 +204,28 @@ int netmesh::recvraw(std::string from, netdata *data)
     return 0;
 }
 
+int netmesh::serviceSend(std::string devname, std::string servname, netdata *data)
+{
+    auto log = logobj->function("serviceSend");
+
+    if (devices.find(devname) == devices.end())
+    {
+        log << "Tried to send data to an invalid device name" << logcpp::loglevel::WARNING;
+        return -1;
+    }
+
+    packet tosend;
+    tosend.addr = devices.at(devname).address;
+    tosend.raw = data->data();
+    tosend.length = data->size();
+
+    for (auto &x : myservices)
+        if (x.second.name == servname)
+            x.second.connptr->send(tosend);
+
+    return 0;
+}
+
 std::string netmesh::returnDevices()
 {
     auto log = logobj->function("returnDevices");
@@ -262,7 +284,7 @@ int netmesh::updateDeviceList()
     return 1;
 } 
 
-uint16_t netmesh::registerUDP(std::string servname, std::function<void(char*,int)> fn)
+uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn)
 {
     auto log = logobj->function("registerUDP");
     uint16_t port = findAvailablePort();
@@ -275,6 +297,7 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(char*,int
     newconn.name = servname;
     newconn.connptr = conn;
     newconn.callback = fn;
+    newconn.ipt = iptype::UDP;
     myservices.insert(std::make_pair(port,newconn));
     return port;
 }
@@ -302,10 +325,16 @@ std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
     toreturn.timeout = std::chrono::system_clock::now();
 
     tinyxml2::XMLDocument doc;
-    doc.Parse(xml);
+    tinyxml2::XMLError errorid = doc.Parse(xml,strlen(xml));
+    if ( errorid != tinyxml2::XMLError::XML_SUCCESS )
+    {
+        log << "Failed to parse input " << errorid << logcpp::loglevel::ERROR;
+        return std::make_pair("",device());
+    }
 
     tinyxml2::XMLElement *dev = doc.RootElement();
     std::string devname = dev->FindAttribute("name")->Value();
+    log << "Devname: " << devname << logcpp::loglevel::NOTE;
     //toreturn.timeout = std::chrono::milliseconds( dev->FindAttribute("timeout")->IntValue() );
 
     auto serv = dev->FirstChildElement("serv");
@@ -393,23 +422,29 @@ int netmesh::checkforconn()
 uint16_t netmesh::findAvailablePort()
 {
     uint16_t toreturn;
+    toreturn = 2000;
     return toreturn;
 }
 
 bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
     int size = myservices.size();
-    pollfd fds[size+1];
+    pollfd fds[size + 1];
 
     fds[0] = *bcsock->topoll(POLLIN);
 
-    int i = 0;
+    int i = 1;
     for (auto &x : myservices)
     {
-        fds[++i] = *x.second.connptr->topoll(POLLIN);
+        fds[i++] = *x.second.connptr->topoll(POLLIN);
     }
 
     int count = poll(fds,size,timeout.count());
+
+    if (count < 1)
+    {
+        return false;
+    }
 
     if (fds[0].revents == POLLIN)
     {
@@ -418,14 +453,25 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
     }
 
     auto it = myservices.begin();
-    for (int j = 1; j < size; j++)
+    for (int j = 1; j < size && count > 0; j++)
     {
         auto revent = fds[j].revents;
         if (revent != 0)
         {
-            //it->second.callback(revent); // Add recv support and pass data as param
+            auto data = it->second.connptr->recv();
+
+            std::string devname;
+            for (auto &x : devices)
+                if (x.second.address == data.addr)
+                    devname = x.first;
+            
+            std::vector<char> ipdata ( data.raw, &data.raw[data.length] );
+            it->second.callback(devname,&ipdata);
+            --count;
         }
 
         it++;
     }
+
+    return true;
 }

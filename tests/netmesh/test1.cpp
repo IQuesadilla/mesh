@@ -1,5 +1,13 @@
 #include "../../netmesh.h"
 
+void mycallback(std::string name,netmesh::netdata* data)
+{
+    std::cout << "Running the callback" << std::endl;
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Length: " << data->size();
+    std::cout << "Data: " << std::string(data->begin(),data->end()) << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 3)
@@ -32,6 +40,8 @@ int main(int argc, char *argv[])
     log << "Running init server with defaults" << logcpp::loglevel::NOTE;
     mesh1->initserver(std::string(argv[1]), avail[n]);
 
+    mesh1->registerUDP("serv1",mycallback);
+
     log << "Delaying for 10s to allow for another device" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
@@ -39,19 +49,10 @@ int main(int argc, char *argv[])
     std::vector<char> datavec (datastring.begin(),datastring.end());
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
-    mesh1->sendraw(argv[2],&datavec);
+    mesh1->serviceSend(argv[2], "serv1", &datavec);
 
-    std::vector<char> recvdatavec;
+    log << "Delaying for 10s to give time for other to send" << logcpp::loglevel::NOTE;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
 
-    log << "Receiving some data" << logcpp::loglevel::NOTE;
-    mesh1->recvraw(argv[2],&recvdatavec);
-
-    log << "recvdatavec length: " << recvdatavec.size() << logcpp::loglevel::VALUE;
-
-    std::string recved (recvdatavec.begin(),recvdatavec.end());
-    log << "Recv'd data length: " << recved.length() << logcpp::loglevel::VALUE;
-    log << "Recv'd data: " << recved << logcpp::loglevel::VALUE;
-
-    log << "Finished" << logcpp::loglevel::NOTE;
     return 0;
 }

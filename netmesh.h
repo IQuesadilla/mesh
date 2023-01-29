@@ -71,10 +71,12 @@ public:
     int sendraw(std::string to, netdata *data);
     int recvraw(std::string from, netdata *data);
 
+    int serviceSend(std::string devname, std::string servname, netdata *data);
+
     std::string returnDevices();
     int updateDeviceList();
 
-    uint16_t registerUDP(std::string servname, std::function<void(char*,int)> fn);
+    uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn);
 
     bool getBroadcastAlive() { return flags.broadcastalive; }
     bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
@@ -102,7 +104,7 @@ private:
         std::string name;
         iptype ipt;
         std::shared_ptr<ip> connptr;
-        std::function<void(char*,int)> callback;
+        std::function<void(std::string,netdata*)> callback;
     };
 
 
