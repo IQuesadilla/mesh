@@ -421,6 +421,8 @@ int netmesh::checkforconn()
 
 uint16_t netmesh::findAvailablePort()
 {
+    auto log = logobj->function("findAvailablePort");
+
     uint16_t toreturn;
     toreturn = 2000;
     return toreturn;
@@ -428,6 +430,8 @@ uint16_t netmesh::findAvailablePort()
 
 bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
+    auto log = logobj->function("pollAll");
+
     int size = myservices.size();
     pollfd fds[size + 1];
 
@@ -440,6 +444,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
     }
 
     int count = poll(fds,size,timeout.count());
+    log << "Polled Count: " << count << logcpp::loglevel::VALUE;
 
     if (count < 1)
     {
@@ -458,6 +463,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         auto revent = fds[j].revents;
         if (revent != 0)
         {
+            log << "Found a service with an event" << logcpp::loglevel::VALUE;
             auto data = it->second.connptr->recv();
 
             std::string devname;
