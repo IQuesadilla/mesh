@@ -432,8 +432,8 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
     auto log = logobj->function("pollAll");
 
-    int size = myservices.size();
-    pollfd fds[size + 1];
+    int size = myservices.size() + 1;
+    pollfd fds[size];
 
     fds[0] = *bcsock->topoll(POLLIN);
 
@@ -460,7 +460,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
     }
 
     auto it = myservices.begin();
-    for (int j = 0; j < size && count > 0; j++)
+    for (int j = 1; j < size && count > 0; j++)
     {
         log << "DATA WAS RECIEVED FROM SOMETHING OTHER THAN UPDATEDEVICELIST!!! =====" << logcpp::loglevel::NOTE;
 
