@@ -30,7 +30,6 @@
 #define TIMEOUTTIME 10000
 
 /*
-    TODO: Add proper logging to ip classes
     TODO: Build out a larger protocol
         - Request mesh info, anyone answers
         - Broadcast internal value update

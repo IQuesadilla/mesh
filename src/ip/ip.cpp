@@ -6,14 +6,18 @@
 #include <sys/ioctl.h>
 #include <poll.h>
 
-#define RECVBLKSIZE 4
+void ip::setLogcpp(std::shared_ptr<logcpp> logptr)
+{
+    logobj = logptr;
+    auto log = logobj->function("setlogcpp");
+}
 
 bool ip::send(const packet raw)
 {
-    std::cout << "Log: (send)" << std::endl;
-    std::cout << "Value: Length: " << raw.length << std::endl;
-    std::cout << "Value: Address: " << inet_ntoa( in_addr{raw.addr} ) << std::endl;
-    std::cout << "Value: Port: " << port << std::endl;
+    auto log = logobj->function("ip::send");
+    log << "Length: " << raw.length << logcpp::loglevel::VALUE;
+    log << "Address: " << inet_ntoa( in_addr{raw.addr} ) << logcpp::loglevel::VALUE;
+    log << "Port: " << port << logcpp::loglevel::VALUE;
 
     sockaddr_in who;
     memset (&who, '\0', sizeof(who));
@@ -23,31 +27,34 @@ bool ip::send(const packet raw)
     who.sin_addr.s_addr = raw.addr;
 
     ssize_t bytes_sent = sendto(fd,raw.raw,raw.length,0,(sockaddr*)&who,sizeof(who));
-    return true;
+    if (bytes_sent == raw.length)
+        return true;
+    else
+        return false;
 }
 
 const packet ip::recv()
 {
-    std::cout << "Log: (recv)" << std::endl;
+    auto log = logobj->function("ip::recv");
     packet toreturn;
 
     int size;
     ioctl(fd, FIONREAD, &size);
-    std::cout << "Value: Size: " << size << std::endl;
+    log << "Size: " << size << logcpp::loglevel::VALUE;
 
     toreturn.raw = (char*)malloc(size);
     int total = 0;
 
-    std::cout << "Log: Waiting for data to receive" << std::endl;
+    log << "Waiting for data to receive" << logcpp::loglevel::NOTE;
 
     struct sockaddr_in fromaddr;
     socklen_t fromaddrlen;
 
     int tempcount = recvfrom(fd,(void*)toreturn.raw,size,MSG_DONTWAIT,(struct sockaddr*)&fromaddr,&fromaddrlen);
-    std::cout << "Value: tempcount: " << tempcount << std::endl;
-    std::cout << "Value: errno: " << errno << std::endl;
-    std::cout << "Value: fd: " << fd << std::endl;
-    std::cout << "Value: From: " << inet_ntoa(fromaddr.sin_addr) << std::endl;
+    log << "tempcount: " << tempcount << logcpp::loglevel::VALUE;
+    log << "errno: " << errno << logcpp::loglevel::VALUE;
+    log << "fd: " << fd << logcpp::loglevel::VALUE;
+    log << "From: " << inet_ntoa(fromaddr.sin_addr) << logcpp::loglevel::VALUE;
 
     toreturn.length = tempcount;
     toreturn.addr = fromaddr.sin_addr.s_addr;
@@ -55,11 +62,12 @@ const packet ip::recv()
     return toreturn;
 }
 
-pollfd *ip::topoll(short int events)
+pollfd ip::topoll(short int events)
 {
-    pollfd *toreturn = new pollfd;
-    toreturn->fd = fd;
-    toreturn->events = events;
-    toreturn->revents = 0;
+    auto log = logobj->function("topoll");
+    pollfd toreturn;
+    toreturn.fd = fd;
+    toreturn.events = events;
+    toreturn.revents = 0;
     return toreturn;
 }

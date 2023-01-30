@@ -3,6 +3,12 @@
 #include <cstring>
 #include <iostream>
 
+udp::udp(std::shared_ptr<logcpp> logobj, uint port /*= 0*/)
+{
+    setLogcpp(logobj);
+    initSocket(port);
+}
+
 bool udp::initSocket(uint setport)
 {
     std::cout << "Log: (testconn)" << std::endl;

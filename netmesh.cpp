@@ -49,7 +49,7 @@ int netmesh::initserver(std::string name, std::string mesh)
     setName(name);
     initBroadcastSocket(mesh);
 
-    sockGeneral.reset(new udp());
+    sockGeneral.reset(new udp(logobj));
     sockGeneral->initSocket(0);
     //sockGeneral->bindaddr();
 
@@ -102,13 +102,13 @@ int netmesh::initBroadcastSocket(std::string addr)
 
     bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
 
-    bcsock.reset(new udp());
+    bcsock.reset(new udp(logobj));
 
     log << "Running initSocket" << logcpp::loglevel::NOTE;
     bcsock->initSocket(BCPORT);
 
     const int trueFlag = 1;
-    if (setsockopt(bcsock->topoll(0)->fd, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
+    if (setsockopt(bcsock->topoll(0).fd, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
         return errno;
 
     bcsock->bindaddr();
@@ -235,7 +235,7 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::stri
     uint16_t port = findAvailablePort();
 
     std::shared_ptr<udp> conn;
-    conn.reset(new udp(port));
+    conn.reset(new udp(logobj,port));
     conn->bindaddr();
 
     myservice newconn;
@@ -380,12 +380,12 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
     int size = myservices.size() + 1;
     pollfd fds[size];
 
-    fds[0] = *bcsock->topoll(POLLIN);
+    fds[0] = bcsock->topoll(POLLIN);
 
     int i = 1;
     for (auto &x : myservices)
     {
-        fds[i++] = *x.second.connptr->topoll(POLLIN);
+        fds[i++] = x.second.connptr->topoll(POLLIN);
     }
 
     log << "Num of Services: " << size << logcpp::loglevel::VALUE;

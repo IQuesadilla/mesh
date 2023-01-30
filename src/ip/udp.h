@@ -8,8 +8,8 @@
 class udp : public ip
 {
 public:
-    udp() { fd = -1; };
-    udp(uint port) { initSocket(port); }
+    //udp() { fd = -1; };
+    udp(std::shared_ptr<logcpp> logobj, uint port = 0);
 
     bool initSocket(uint setport);
 

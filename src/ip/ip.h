@@ -10,6 +10,8 @@
 #include <poll.h>
 #include <vector>
 #include <string>
+#include <memory>
+#include "../../logcpp/logcpp.h"
 
 struct packet
 {
@@ -25,16 +27,19 @@ public:
     //ip(uint port) { initSocket(port); }
     ~ip() { close(fd); }
 
+    void setLogcpp(std::shared_ptr<logcpp> logptr);
+
     virtual bool initSocket(uint port) = 0;
 
     bool send(const packet raw);
     const packet recv();
 
-    pollfd *topoll(short int events);
+    pollfd topoll(short int events);
 
 protected:
     int fd;
     int port;
+    std::shared_ptr<logcpp> logobj;
 };
 
 #endif
