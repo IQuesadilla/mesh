@@ -66,7 +66,6 @@ public:
     int serviceSend(std::string devname, std::string servname, netdata *data);
 
     std::string returnDevices();
-    int updateDeviceList();
 
     uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn);
 
@@ -102,8 +101,11 @@ private:
 
     int broadcastAlive();
     
-    std::pair<std::string,device> parseUpdate(const char *xml);
+    int parseUpdate(packet input);
     tinyxml2::XMLPrinter *generateUpdate();
+
+    int updateDeviceList(std::string devname, netmesh::device devobj);
+
     //int checkforconn();
     uint16_t findAvailablePort();
     bool pollAll(std::chrono::milliseconds timeout);

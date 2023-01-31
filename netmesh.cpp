@@ -184,28 +184,23 @@ std::string netmesh::returnDevices()
 
     return ss.str();
 }
-
-int netmesh::updateDeviceList()
+ 
+int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
 {
     auto log = logobj->function("updateDeviceList");
 
-    auto resp = bcsock->recv();
-    int count = resp.length;
-    auto dev = parseUpdate(resp.raw);
-
-    log << "NAME " << dev.first << logcpp::loglevel::VALUE;
-    if (dev.first == myName)
+        log << "NAME " << devname << logcpp::loglevel::VALUE;
+    if (devname == myName)
         return 1;
     auto settimeout = std::chrono::system_clock::now();
 
     bool newdev = false;
-    if (devices.find(dev.first) == devices.end())
+    if (devices.find(devname) == devices.end())
     {
         newdev = true;
     }
     
-    dev.second.address = resp.addr;
-    devices[dev.first] = dev.second;
+    devices[devname] = devobj;
 
     if (newdev)
         log << "Device Added!" << "\n"
@@ -262,57 +257,78 @@ int netmesh::broadcastAlive()
     return 0;
 }
 
-std::pair<std::string,netmesh::device> netmesh::parseUpdate(const char *xml)
+int netmesh::parseUpdate(packet input)
 {
     auto log = logobj->function("parseUpdate");
 
-    device toreturn;
-    toreturn.timeout = std::chrono::system_clock::now();
+    device newdev;
+    newdev.address = input.addr;
+    newdev.timeout = std::chrono::system_clock::now();
 
     tinyxml2::XMLDocument doc;
-    tinyxml2::XMLError errorid = doc.Parse(xml,strlen(xml));
+    tinyxml2::XMLError errorid = doc.Parse(input.raw,input.length);
     if ( errorid != tinyxml2::XMLError::XML_SUCCESS )
     {
         log << "Failed to parse input " << errorid << logcpp::loglevel::ERROR;
-        return std::make_pair("",device());
+        return -1;
     }
 
-    tinyxml2::XMLElement *dev = doc.RootElement();
-    std::string devname = dev->FindAttribute("name")->Value();
-    log << "Devname: " << devname << logcpp::loglevel::NOTE;
-    //toreturn.timeout = std::chrono::milliseconds( dev->FindAttribute("timeout")->IntValue() );
-
-    auto serv = dev->FirstChildElement("serv");
-    if ( serv )
-        do
-        {
-            std::pair<std::string,service> tempserv;
-            tempserv.first = serv->FindAttribute("name")->Value();
-            tempserv.second.port = serv->FindAttribute("port")->IntValue();
-
-            auto tempiptype = std::string(serv->FindAttribute("ip")->Value());
-            if (tempiptype == "udp")
-                tempserv.second.ipt = iptype::UDP;
-            else if (tempiptype == "tcp")
-                tempserv.second.ipt = iptype::TCP;
-            else
-                log << "Invalid IP Type: " << tempserv.second.ipt << logcpp::loglevel::ERROR;
-
-            toreturn.services.insert(tempserv);
-        }
-        while ( serv = serv->NextSiblingElement("serv") );
-    
-    log << "Device Name: " << devname << logcpp::loglevel::VALUE;
-    //log << "Device Timeout: " << toreturn.timeout << std::endl;
-
-    for (auto &x : toreturn.services)
+    tinyxml2::XMLElement *root = doc.RootElement();
+    if ( !root )
     {
-        log << "Service Name: " << x.first << logcpp::loglevel::VALUE;
-        log << "Service Port: " << x.second.port << logcpp::loglevel::VALUE;
-        log << "Service IP: " << x.second.ipt << logcpp::loglevel::VALUE;
+        log << "Invalid root element" << root->Name() << logcpp::loglevel::ERROR;
+        return -1;
     }
 
-    return std::make_pair(devname,toreturn);
+    do
+    {
+        if (std::string(root->Name()) == "dev")
+        {
+            std::string devname = root->FindAttribute("name")->Value();
+            log << "Devname: " << devname << logcpp::loglevel::NOTE;
+            //toreturn.timeout = std::chrono::milliseconds( dev->FindAttribute("timeout")->IntValue() );
+
+            auto serv = root->FirstChildElement("serv");
+            if ( serv )
+                do
+                {
+                    std::pair<std::string,service> tempserv;
+                    tempserv.first = serv->FindAttribute("name")->Value();
+                    tempserv.second.port = serv->FindAttribute("port")->IntValue();
+
+                    auto tempiptype = std::string(serv->FindAttribute("ip")->Value());
+                    if (tempiptype == "udp")
+                        tempserv.second.ipt = iptype::UDP;
+                    else if (tempiptype == "tcp")
+                        tempserv.second.ipt = iptype::TCP;
+                    else
+                        log << "Invalid IP Type: " << tempserv.second.ipt << logcpp::loglevel::ERROR;
+
+                    newdev.services.insert(tempserv);
+                }
+                while ( serv = serv->NextSiblingElement("serv") );
+            
+            log << "Device Name: " << devname << logcpp::loglevel::VALUE;
+            //log << "Device Timeout: " << newdev.timeout << std::endl;
+
+            for (auto &x : newdev.services)
+            {
+                log << "Service Name: " << x.first << logcpp::loglevel::VALUE;
+                log << "Service Port: " << x.second.port << logcpp::loglevel::VALUE;
+                log << "Service IP Type: " << x.second.ipt << logcpp::loglevel::VALUE;
+            }
+
+            updateDeviceList( devname, newdev );
+        }
+        else
+        {
+            log << "Invalid root string: " << root->Name() << logcpp::loglevel::ERROR;
+            return -1;
+        }
+    }
+    while ( root = root->NextSiblingElement() );
+
+    return -1;
 }
 
 tinyxml2::XMLPrinter *netmesh::generateUpdate()
@@ -400,7 +416,9 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
 
     if (fds[0].revents == POLLIN)
     {
-        updateDeviceList();
+        auto resp = bcsock->recv();
+
+        parseUpdate(resp);
         --count;
     }
 
