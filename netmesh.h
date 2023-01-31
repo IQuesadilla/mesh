@@ -69,12 +69,12 @@ public:
 
     uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn);
 
-    bool getBroadcastAlive() { return flags.broadcastalive; }
-    bool setBroadcastAlive(bool in) { return (flags.broadcastalive = in); }
-    std::string getName() { return myName; }
-    std::string setName(std::string in) { return (myName = in); }
+    bool getBroadcastAlive();
+    bool setBroadcastAlive(bool in);
+    std::string getName();
+    std::string setName(std::string in);
 
-    static void run(netmesh *mynetmesh) { mynetmesh->updateThread(); };
+    static void run(netmesh *mynetmesh);
 
 private:
     struct service

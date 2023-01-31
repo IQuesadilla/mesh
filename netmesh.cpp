@@ -1,27 +1,5 @@
 #include "netmesh.h"
 
-void netmesh::updateThread()
-{
-    auto log = logobj->function("updateThread");
-    while (isConnected())
-    {
-        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
-        auto temptimeout = std::chrono::milliseconds(UPDATETIME);
-        while (pollAll(temptimeout))
-        {
-            if ( !isConnected() )
-                return;
-                
-            temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
-        }
-
-        if (getBroadcastAlive())
-            broadcastAlive();
-    }
-}
-
-
-
 netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 {
     enableLogging(logptr);
@@ -184,45 +162,6 @@ std::string netmesh::returnDevices()
 
     return ss.str();
 }
- 
-int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
-{
-    auto log = logobj->function("updateDeviceList");
-
-        log << "NAME " << devname << logcpp::loglevel::VALUE;
-    if (devname == myName)
-        return 1;
-    auto settimeout = std::chrono::system_clock::now();
-
-    bool newdev = false;
-    if (devices.find(devname) == devices.end())
-    {
-        newdev = true;
-    }
-    
-    devices[devname] = devobj;
-
-    if (newdev)
-        log << "Device Added!" << "\n"
-                    << returnDevices() << logcpp::loglevel::NOTE;
-
-    for (auto it = devices.cbegin(); it != devices.cend();)
-    {
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
-        {
-            log << "Removing device from mesh" << logcpp::loglevel::NOTE;
-            log << "Device: " << it->first << logcpp::loglevel::VALUE;
-            devices.erase(it++);
-            log << "Successfully removed device from mesh" << logcpp::loglevel::NOTE;
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    return 1;
-} 
 
 uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn)
 {
@@ -241,6 +180,31 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::stri
     myservices.insert(std::make_pair(port,newconn));
     return port;
 }
+
+bool netmesh::getBroadcastAlive()
+{
+    return flags.broadcastalive;
+}
+
+bool netmesh::setBroadcastAlive(bool in)
+{
+    return (flags.broadcastalive = in);
+}
+
+std::string netmesh::getName()
+{
+    return myName;
+}
+
+std::string netmesh::setName(std::string in)
+{
+    return (myName = in);
+}
+
+void netmesh::run(netmesh *mynetmesh)
+{
+    mynetmesh->updateThread();
+};
 
 int netmesh::broadcastAlive()
 {
@@ -359,6 +323,45 @@ tinyxml2::XMLPrinter *netmesh::generateUpdate()
     return print;
 }
 
+int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
+{
+    auto log = logobj->function("updateDeviceList");
+
+        log << "NAME " << devname << logcpp::loglevel::VALUE;
+    if (devname == myName)
+        return 1;
+    auto settimeout = std::chrono::system_clock::now();
+
+    bool newdev = false;
+    if (devices.find(devname) == devices.end())
+    {
+        newdev = true;
+    }
+    
+    devices[devname] = devobj;
+
+    if (newdev)
+        log << "Device Added!" << "\n"
+                    << returnDevices() << logcpp::loglevel::NOTE;
+
+    for (auto it = devices.cbegin(); it != devices.cend();)
+    {
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
+        {
+            log << "Removing device from mesh" << logcpp::loglevel::NOTE;
+            log << "Device: " << it->first << logcpp::loglevel::VALUE;
+            devices.erase(it++);
+            log << "Successfully removed device from mesh" << logcpp::loglevel::NOTE;
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    return 1;
+} 
+
 /*
 int netmesh::checkforconn()
 {
@@ -447,4 +450,24 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
     }
 
     return true;
+}
+
+void netmesh::updateThread()
+{
+    auto log = logobj->function("updateThread");
+    while (isConnected())
+    {
+        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
+        auto temptimeout = std::chrono::milliseconds(UPDATETIME);
+        while (pollAll(temptimeout))
+        {
+            if ( !isConnected() )
+                return;
+                
+            temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
+        }
+
+        if (getBroadcastAlive())
+            broadcastAlive();
+    }
 }
