@@ -74,7 +74,8 @@ public:
     std::string getName();
     std::string setName(std::string in);
 
-    static void run(netmesh *mynetmesh);
+    void runOnce();
+    void runForever();
 
 private:
     struct service

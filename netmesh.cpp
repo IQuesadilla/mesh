@@ -201,10 +201,17 @@ std::string netmesh::setName(std::string in)
     return (myName = in);
 }
 
-void netmesh::run(netmesh *mynetmesh)
+void netmesh::runOnce()
 {
-    mynetmesh->updateThread();
+    auto log = logobj->function("runOnce");
+    updateThread();
 };
+
+void netmesh::runForever()
+{
+    auto log = logobj->function("runForever");
+    while ( isConnected() ) updateThread();
+}
 
 int netmesh::broadcastAlive()
 {
@@ -455,19 +462,17 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
 void netmesh::updateThread()
 {
     auto log = logobj->function("updateThread");
-    while (isConnected())
-    {
-        auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
-        auto temptimeout = std::chrono::milliseconds(UPDATETIME);
-        while (pollAll(temptimeout))
-        {
-            if ( !isConnected() )
-                return;
-                
-            temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
-        }
 
-        if (getBroadcastAlive())
-            broadcastAlive();
+    auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
+    auto temptimeout = std::chrono::milliseconds(UPDATETIME);
+    while (pollAll(temptimeout))
+    {
+        if ( !isConnected() )
+            return;
+            
+        temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
     }
+
+    if (getBroadcastAlive())
+        broadcastAlive();
 }

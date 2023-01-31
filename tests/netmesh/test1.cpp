@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     mesh1->registerUDP("serv1",mycallback);
 
-    std::thread mythread (netmesh::run,mesh1.get());
+    std::thread mythread (&netmesh::runForever,mesh1.get());
 
     log << "Delaying for 10s to allow for another device" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
