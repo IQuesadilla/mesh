@@ -20,7 +20,7 @@ meshfs_test2: tests/meshfs/test2.cpp meshfs.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -D_FILE_OFFSET_BITS=64 -lpthread -lfuse3
 
 netmesh_test1: tests/netmesh/test1.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o tinyxml2/tinyxml2.o
-	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread
+	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread -lrt
 
 netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o
 	$(CXX) -o ./tests/bin/$@ $^ -std=c++17 -lpthread

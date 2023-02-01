@@ -54,8 +54,6 @@ public:
     int initserver(std::string name, std::string mesh);
     int killserver();
 
-    void enableLogging(std::shared_ptr<logcpp> log);
-
     std::vector<std::string> findAvailableMeshes();
 
     int initBroadcastSocket(std::string addr);
@@ -69,14 +67,18 @@ public:
 
     uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn);
 
+    std::shared_ptr<logcpp> getLogger();
+    void setLogger(std::shared_ptr<logcpp> log);
     bool getBroadcastAlive();
     bool setBroadcastAlive(bool in);
     std::string getName();
     std::string setName(std::string in);
-    std::function<void(void*)> getGenericCallback();
-    void setGenericCallback(std::function<void(void*)> callback);
     void *getUserPtr();
     void setUserPtr(void *ptr);
+    void setIntMsgHandler(std::function<void(std::string,void*)> fn);
+    std::function<void(std::string,void*)> getIntMsgHandler();
+
+    void interruptMsg(std::string message);
 
     void runOnce();
     void runForever();
@@ -130,8 +132,9 @@ private:
     std::map<uint16_t,myservice> myservices;
     std::shared_ptr<udp> sockGeneral;
     std::shared_ptr<logcpp> logobj;
+    int wfifo, rfifo;
+    std::function<void(std::string,void*)> intMsgHandler;
     void *userptr;
-    std::function<void(void*)> genericCallback;
 };
 
 #endif

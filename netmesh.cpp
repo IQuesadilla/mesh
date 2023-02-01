@@ -1,8 +1,10 @@
 #include "netmesh.h"
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 {
-    enableLogging(logptr);
+    setLogger(logptr);
 
     auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
@@ -32,6 +34,13 @@ int netmesh::initserver(std::string name, std::string mesh)
     sockGeneral->initSocket(0);
     //sockGeneral->bindaddr();
 
+    int pipes[2];
+    if (pipe(pipes) < 0)
+        return -1;
+
+    rfifo = pipes[0];
+    wfifo = pipes[1];
+
     myName = name;
     connected = true;
 
@@ -44,12 +53,6 @@ int netmesh::killserver()
     connected = false;
 
     return 0;
-}
-
-void netmesh::enableLogging(std::shared_ptr<logcpp> log)
-{
-    logobj = log;
-    auto templog = logobj->function("enableLogging");
 }
 
 std::vector<std::string> netmesh::findAvailableMeshes()
@@ -182,6 +185,18 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::stri
     return port;
 }
 
+std::shared_ptr<logcpp> netmesh::getLogger()
+{
+    auto templog = logobj->function("getLogger");
+    return logobj;
+}
+
+void netmesh::setLogger(std::shared_ptr<logcpp> log)
+{
+    logobj = log;
+    auto templog = logobj->function("setLogger");
+}
+
 bool netmesh::getBroadcastAlive()
 {
     return flags.broadcastalive;
@@ -202,16 +217,6 @@ std::string netmesh::setName(std::string in)
     return (myName = in);
 }
 
-std::function<void(void*)> netmesh::getGenericCallback()
-{
-    return genericCallback;
-}
-
-void netmesh::setGenericCallback(std::function<void(void*)> callback)
-{
-    genericCallback = callback;
-}
-
 void *netmesh::getUserPtr()
 {
     return userptr;
@@ -220,6 +225,20 @@ void *netmesh::getUserPtr()
 void netmesh::setUserPtr(void *ptr)
 {
     userptr = ptr;
+}
+
+void netmesh::setIntMsgHandler(std::function<void(std::string,void*)> fn)
+{
+    intMsgHandler = fn;
+}
+std::function<void(std::string,void*)> netmesh::getIntMsgHandler()
+{
+    return intMsgHandler;
+}
+
+void netmesh::interruptMsg(std::string message)
+{
+    write(wfifo,message.c_str(),message.length()+1);
 }
 
 void netmesh::runOnce()
@@ -424,12 +443,15 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
     auto log = logobj->function("pollAll");
 
-    int size = myservices.size() + 1;
+    int internalFunctionCount = 2;
+    int size = myservices.size() + internalFunctionCount;
     pollfd fds[size];
 
     fds[0] = bcsock->topoll(POLLIN);
+    fds[1].fd = rfifo;
+    fds[1].events = POLLIN;
 
-    int i = 1;
+    int i = internalFunctionCount;
     for (auto &x : myservices)
     {
         fds[i++] = x.second.connptr->topoll(POLLIN);
@@ -437,11 +459,16 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
 
     log << "Num of Services: " << size << logcpp::loglevel::VALUE;
 
-    int count = poll(fds,size,timeout.count());
+    int count = -1;
+    do {
+        errno = 0;
+        count = poll(fds,size,timeout.count());
+    } while (errno == 4);
     log << "Polled Count: " << count << logcpp::loglevel::VALUE;
 
     if (count < 1)
     {
+        log << "Errno: " << errno << logcpp::loglevel::ERROR;
         return false;
     }
 
@@ -452,9 +479,20 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         parseUpdate(resp);
         --count;
     }
+    else if (fds[1].revents == POLLIN)
+    {
+        // Read data from fifo and run callback with data
+        int fifosize;
+        ioctl(rfifo, FIONREAD, &fifosize);
+        char *buff = (char*)malloc(fifosize);
+        read(rfifo,buff,fifosize);
+
+        getIntMsgHandler()(std::string(buff,fifosize),getUserPtr());
+        --count;
+    }
 
     auto it = myservices.begin();
-    for (int j = 1; j < size && count > 0; j++)
+    for (int j = internalFunctionCount; j < size && count > 0; j++)
     {
         log << "DATA WAS RECIEVED FROM SOMETHING OTHER THAN UPDATEDEVICELIST!!! =====" << logcpp::loglevel::NOTE;
 
@@ -496,7 +534,4 @@ void netmesh::updateThread()
 
     if (getBroadcastAlive())
         broadcastAlive();
-
-    if (genericCallback)
-        genericCallback(userptr);
 }
