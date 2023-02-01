@@ -6,6 +6,7 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
 
     auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
+    setUserPtr(nullptr);
 }
 
 netmesh::~netmesh()
@@ -163,7 +164,7 @@ std::string netmesh::returnDevices()
     return ss.str();
 }
 
-uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn)
+uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn)
 {
     auto log = logobj->function("registerUDP");
     uint16_t port = findAvailablePort();
@@ -199,6 +200,26 @@ std::string netmesh::getName()
 std::string netmesh::setName(std::string in)
 {
     return (myName = in);
+}
+
+std::function<void(void*)> netmesh::getGenericCallback()
+{
+    return genericCallback;
+}
+
+void netmesh::setGenericCallback(std::function<void(void*)> callback)
+{
+    genericCallback = callback;
+}
+
+void *netmesh::getUserPtr()
+{
+    return userptr;
+}
+
+void netmesh::setUserPtr(void *ptr)
+{
+    userptr = ptr;
 }
 
 void netmesh::runOnce()
@@ -449,7 +470,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
                     devname = x.first;
             
             std::vector<char> ipdata ( data.raw, &data.raw[data.length] );
-            it->second.callback(devname,&ipdata);
+            it->second.callback(devname,&ipdata,getUserPtr());
             --count;
         }
 
@@ -475,4 +496,7 @@ void netmesh::updateThread()
 
     if (getBroadcastAlive())
         broadcastAlive();
+
+    if (genericCallback)
+        genericCallback(userptr);
 }

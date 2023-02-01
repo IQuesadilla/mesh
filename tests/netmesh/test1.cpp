@@ -1,11 +1,21 @@
 #include "../../netmesh.h"
 
-void mycallback(std::string name,netmesh::netdata* data)
+void mycallback(std::string name,netmesh::netdata* data, void* userptr)
 {
-    std::cout << "Running the callback" << std::endl;
-    std::cout << "Name: " << name << std::endl;
-    std::cout << "Length: " << data->size() << std::endl;
-    std::cout << "Data: " << std::string(data->begin(),data->end()) << std::endl;
+    std::shared_ptr<logcpp> logobj = *(std::shared_ptr<logcpp>*)userptr;
+    auto log = logobj->function("mycallback");
+
+    log << "Running the callback" << logcpp::loglevel::NOTE;
+    log << "Name: " << name << logcpp::loglevel::VALUE;
+    log << "Length: " << data->size() << logcpp::loglevel::VALUE;
+    log << "Data: " << std::string(data->begin(),data->end()) << logcpp::loglevel::VALUE;
+}
+
+void mygeneric(void* userptr)
+{
+    std::shared_ptr<logcpp> logobj = *(std::shared_ptr<logcpp>*)userptr;
+    auto log = logobj->function("mygeneric");
+    log << "Running my generic callback" << logcpp::loglevel::NOTE;
 }
 
 int main(int argc, char *argv[])
@@ -25,6 +35,9 @@ int main(int argc, char *argv[])
 
     log << "Resetting with new netmesh object" << logcpp::loglevel::NOTE;
     mesh1.reset(new netmesh(logobj));
+
+    mesh1->setUserPtr(&logobj);
+    mesh1->setGenericCallback(mygeneric);
 
     log << "Finding available meshes" << logcpp::loglevel::NOTE;
     auto avail = mesh1->findAvailableMeshes();

@@ -67,12 +67,16 @@ public:
 
     std::string returnDevices();
 
-    uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*)> fn);
+    uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn);
 
     bool getBroadcastAlive();
     bool setBroadcastAlive(bool in);
     std::string getName();
     std::string setName(std::string in);
+    std::function<void(void*)> getGenericCallback();
+    void setGenericCallback(std::function<void(void*)> callback);
+    void *getUserPtr();
+    void setUserPtr(void *ptr);
 
     void runOnce();
     void runForever();
@@ -96,7 +100,7 @@ private:
         std::string name;
         iptype ipt;
         std::shared_ptr<ip> connptr;
-        std::function<void(std::string,netdata*)> callback;
+        std::function<void(std::string,netdata*,void*)> callback;
     };
 
 
@@ -117,8 +121,6 @@ private:
         bool broadcastalive;
     } flags;
 
-
-    //int listensock; // TODO Initialize udpsock
     std::shared_ptr<udp> bcsock;
     std::chrono::_V2::system_clock::time_point last_update;
     std::string myName;
@@ -128,6 +130,8 @@ private:
     std::map<uint16_t,myservice> myservices;
     std::shared_ptr<udp> sockGeneral;
     std::shared_ptr<logcpp> logobj;
+    void *userptr;
+    std::function<void(void*)> genericCallback;
 };
 
 #endif
