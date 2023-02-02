@@ -25,12 +25,14 @@
 #include "../../logcpp/logcpp.h"
 
 /*
-    TODO: Build out a larger protocol
-        - Request mesh info, anyone answers
-        - Broadcast internal value update
-            - Update time
-            - Timeout time
-        - Leaving the mesh
+    TODO: 
+        Build out a larger protocol
+            - Request mesh info, anyone answers
+            - Broadcast internal value update
+                - Update time
+                - Timeout time
+            - Leaving the mesh
+        Finish findAvailablePort
 */
 
 class netmesh
@@ -114,7 +116,7 @@ private:
     int updateDeviceList(std::string devname, netmesh::device devobj);
 
     //int checkforconn();
-    uint16_t findAvailablePort();
+    bool findAvailablePort(std::shared_ptr<ip> netobj);
     bool pollAll(std::chrono::milliseconds timeout);
     void updateThread();
 

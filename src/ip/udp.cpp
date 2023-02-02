@@ -28,7 +28,7 @@ bool udp::initSocket(uint setport)
         return errno;
     }
 
-    port = setport;
+    port(setport);
     return true;
 }
 
@@ -39,7 +39,7 @@ int udp::bindaddr(std::string addr /*= "0.0.0.0"*/)
 
     udpaddr.sin_family = AF_INET;
     udpaddr.sin_addr.s_addr = inet_addr(addr.c_str()); // TODO might not work? untested
-    udpaddr.sin_port = htons(port);
+    udpaddr.sin_port = htons(port());
 
     if (bind(fd, (const struct sockaddr *)&udpaddr, sizeof(udpaddr)) < 0)
     {

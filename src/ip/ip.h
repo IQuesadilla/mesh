@@ -34,11 +34,13 @@ public:
     bool send(const packet raw);
     const packet recv();
 
+    int port(int setport = -1);
+
     pollfd topoll(short int events);
 
 protected:
     int fd;
-    int port;
+    int _port;
     std::shared_ptr<logcpp> logobj;
 };
 

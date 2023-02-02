@@ -180,19 +180,18 @@ std::string netmesh::returnDevices()
 uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn)
 {
     auto log = logobj->function("registerUDP");
-    uint16_t port = findAvailablePort();
 
     std::shared_ptr<udp> conn;
-    conn.reset(new udp(logobj,port));
-    conn->bindaddr();
+    conn.reset(new udp(logobj));
+    findAvailablePort(conn);
 
     myservice newconn;
     newconn.name = servname;
     newconn.connptr = conn;
     newconn.callback = fn;
     newconn.ipt = iptype::UDP;
-    myservices.insert(std::make_pair(port,newconn));
-    return port;
+    myservices.insert(std::make_pair(conn->port(),newconn));
+    return conn->port();
 }
 
 std::shared_ptr<logcpp> netmesh::getLogger()
@@ -440,12 +439,12 @@ int netmesh::checkforconn()
 }
 */
 
-uint16_t netmesh::findAvailablePort()
+bool netmesh::findAvailablePort(std::shared_ptr<ip> netobj)
 {
     auto log = logobj->function("findAvailablePort");
 
     uint16_t toreturn;
-    toreturn = 2000;
+    while(netobj->bindaddr())
     return toreturn;
 }
 

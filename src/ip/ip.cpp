@@ -17,13 +17,13 @@ bool ip::send(const packet raw)
     auto log = logobj->function("ip::send");
     log << "Length: " << raw.length << logcpp::loglevel::VALUE;
     log << "Address: " << inet_ntoa( in_addr{raw.addr} ) << logcpp::loglevel::VALUE;
-    log << "Port: " << port << logcpp::loglevel::VALUE;
+    log << "Port: " << port() << logcpp::loglevel::VALUE;
 
     sockaddr_in who;
     memset (&who, '\0', sizeof(who));
 
     who.sin_family = AF_INET;
-    who.sin_port = htons(port);
+    who.sin_port = htons(port());
     who.sin_addr.s_addr = raw.addr;
 
     ssize_t bytes_sent = sendto(fd,raw.raw,raw.length,0,(sockaddr*)&who,sizeof(who));
@@ -60,6 +60,13 @@ const packet ip::recv()
     toreturn.addr = fromaddr.sin_addr.s_addr;
 
     return toreturn;
+}
+
+int ip::port(int setport = -1)
+{
+    if (setport < 0)
+        _port = setport;
+    return _port;
 }
 
 pollfd ip::topoll(short int events)
