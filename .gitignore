@@ -34,5 +34,3 @@ bin/*
 
 # Logs
 *.log
-
-tests/bin/*
