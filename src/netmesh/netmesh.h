@@ -24,11 +24,6 @@
 #include "../../src/ip/udp.h"
 #include "../../logcpp/logcpp.h"
 
-#define BCPORT 1999
-#define TCPPORT 1998
-#define UPDATETIME 2000
-#define TIMEOUTTIME 10000
-
 /*
     TODO: Build out a larger protocol
         - Request mesh info, anyone answers
@@ -51,7 +46,12 @@ public:
     netmesh(std::shared_ptr<logcpp> log);
     ~netmesh();
 
-    int initserver(std::string name, std::string mesh);
+    int initserver( std::string name,
+                    std::string mesh,
+                    int bcport = 1999,
+                    int tcpport = 1998,
+                    int updatetime = 2000,
+                    int timeouttime = 10000);
     int killserver();
 
     std::vector<std::string> findAvailableMeshes();
@@ -121,6 +121,10 @@ private:
     struct
     {
         bool broadcastalive;
+        int bcport;
+        int tcpport;
+        int updatetime;
+        int timeouttime;
     } flags;
 
     std::shared_ptr<udp> bcsock;

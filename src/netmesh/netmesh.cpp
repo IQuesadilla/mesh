@@ -20,7 +20,12 @@ netmesh::~netmesh()
     }
 }
 
-int netmesh::initserver(std::string name, std::string mesh)
+int netmesh::initserver(std::string name,
+                        std::string mesh,
+                        int bcport /*= 1999*/,
+                        int tcpport /*= 1998*/,
+                        int updatetime /*= 2000*/,
+                        int timeouttime /*= 10000*/)
 {
     auto log = logobj->function("initserver");
     if (connected == true)
@@ -40,6 +45,11 @@ int netmesh::initserver(std::string name, std::string mesh)
 
     rfifo = pipes[0];
     wfifo = pipes[1];
+
+    flags.bcport = bcport;
+    flags.tcpport = tcpport;
+    flags.updatetime = updatetime;
+    flags.timeouttime = timeouttime;
 
     myName = name;
     connected = true;
@@ -87,7 +97,7 @@ int netmesh::initBroadcastSocket(std::string addr)
     bcsock.reset(new udp(logobj));
 
     log << "Running initSocket" << logcpp::loglevel::NOTE;
-    bcsock->initSocket(BCPORT);
+    bcsock->initSocket(flags.bcport);
 
     const int trueFlag = 1;
     if (setsockopt(bcsock->topoll(0).fd, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
@@ -349,7 +359,7 @@ tinyxml2::XMLPrinter *netmesh::generateUpdate()
     tinyxml2::XMLDocument doc;
     auto dev = doc.NewElement("dev");
     dev->SetAttribute("name",myName.c_str());
-    dev->SetAttribute("timeout",TIMEOUTTIME);
+    dev->SetAttribute("timeout",flags.timeouttime);
     doc.InsertFirstChild(dev);
 
     for (auto &x : myservices)
@@ -393,7 +403,7 @@ int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
 
     for (auto it = devices.cbegin(); it != devices.cend();)
     {
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(TIMEOUTTIME))
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(flags.timeouttime))
         {
             log << "Removing device from mesh" << logcpp::loglevel::NOTE;
             log << "Device: " << it->first << logcpp::loglevel::VALUE;
@@ -523,13 +533,13 @@ void netmesh::updateThread()
     auto log = logobj->function("updateThread");
 
     auto polltimeout = std::chrono::system_clock::now().time_since_epoch();
-    auto temptimeout = std::chrono::milliseconds(UPDATETIME);
+    auto temptimeout = std::chrono::milliseconds(flags.updatetime);
     while (pollAll(temptimeout))
     {
         if ( !isConnected() )
             return;
             
-        temptimeout = std::chrono::milliseconds(UPDATETIME) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
+        temptimeout = std::chrono::milliseconds(flags.updatetime) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
     }
 
     if (getBroadcastAlive())
