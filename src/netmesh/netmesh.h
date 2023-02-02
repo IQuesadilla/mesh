@@ -20,9 +20,9 @@
 #include <map>
 #include <memory>
 #include <functional>
-#include "tinyxml2/tinyxml2.h"
-#include "src/ip/udp.h"
-#include "logcpp/logcpp.h"
+#include "../../tinyxml2/tinyxml2.h"
+#include "../../src/ip/udp.h"
+#include "../../logcpp/logcpp.h"
 
 #define BCPORT 1999
 #define TCPPORT 1998

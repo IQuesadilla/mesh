@@ -47,7 +47,7 @@ meshfs.o: meshfs.cpp meshfs.h
 libnetmesh.so: netmesh.o
 	$(CXX) $(SOFLAGS)
 
-netmesh.o: netmesh.cpp netmesh.h
+netmesh.o: src/netmesh/netmesh.cpp src/netmesh/netmesh.h
 	$(CXX) $(OBJFLAGS)
 
 ip_udp.o: src/ip/udp.cpp src/ip/udp.h src/ip/ip.h

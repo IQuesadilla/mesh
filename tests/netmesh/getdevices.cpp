@@ -1,4 +1,4 @@
-#include "../../netmesh.h"
+#include "../../src/netmesh/netmesh.h"
 
 int main (int argc, char **argv)
 {

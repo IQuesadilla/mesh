@@ -1,4 +1,4 @@
-#include "../../netmesh.h"
+#include "../../src/netmesh/netmesh.h"
 #include <signal.h>
 
 void mycallback(std::string name, netmesh::netdata* data, void* userptr)

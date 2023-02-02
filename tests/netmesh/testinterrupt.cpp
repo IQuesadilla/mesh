@@ -1,4 +1,4 @@
-#include "../../netmesh.h"
+#include "../../src/netmesh/netmesh.h"
 #include <signal.h>
 
 std::unique_ptr<netmesh> mesh1;
