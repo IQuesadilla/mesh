@@ -4,7 +4,9 @@ OBJFLAGS = -o $@ -c $< $(CFLAGS)
 TESTFLAGS = -o ./tests/bin/$@ $^ $(CFLAGS)
 SOFLAGS = -o $(LIBDIR)/$@ $^ -shared
 TARGET = libfilemesh.so
-TESTS = meshfs_test1 meshfs_test2 udp_test1
+NETMESHTESTS = netmesh_testthreaded netmesh_testinterrupt netmesh_test_getdevices
+MESHFSTESTS = meshfs_test1 meshfs_test2
+TESTS = udp_test1 $(NETMESHTESTS) $(MESHFSTESTS)
 LIBDIR = ./lib/
 
 all: $(TARGET)
@@ -12,7 +14,7 @@ all: $(TARGET)
 tests: $(TESTS)
 
 #heyo
-udp_test1: tests/ip/test1.cpp ip_ip.o ip_udp.o
+udp_test1: tests/ip/test1.cpp ip_ip.o ip_udp.o logcpp/liblogcpp.o
 	$(CXX) $(TESTFLAGS) -lpthread
 
 meshfs_test1: tests/meshfs/test1.cpp meshfs.o
@@ -27,7 +29,7 @@ netmesh_testthreaded: tests/netmesh/testthreaded.cpp netmesh.o ip_ip.o ip_udp.o 
 netmesh_testinterrupt: tests/netmesh/testinterrupt.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o tinyxml2/tinyxml2.o
 	$(CXX) $(TESTFLAGS) -lrt
 
-netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o
+netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/liblogcpp.o tinyxml2/tinyxml2.o
 	$(CXX) $(TESTFLAGS) -lpthread
 
 libfilemesh.so: filemesh.o netmesh.o meshfs.o

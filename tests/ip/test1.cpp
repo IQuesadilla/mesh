@@ -12,7 +12,8 @@ void server(ip *socket)
     std::cout << "Log: (server)" << std::endl;
     for (int i = 0; i < 5; ++i)
     {
-        poll(socket->topoll(POLLIN),1,-1);
+        auto p = socket->topoll(POLLIN);
+        poll(&p,1,-1);
 
         packet raw = socket->recv();
         if (raw.length > 0)
@@ -45,8 +46,11 @@ void client(ip *socket)
 
 int main(int argc, char *argv[])
 {
-    std::cout << "Log: (main)" << std::endl;
-    udp serversocket, clientsocket;
+    std::shared_ptr<logcpp> logobj;
+    logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
+    auto log = logobj->function("main");
+
+    udp serversocket(logobj), clientsocket(logobj);
     serversocket.initSocket(PORT);
     clientsocket.initSocket(PORT);
     serversocket.bindaddr();

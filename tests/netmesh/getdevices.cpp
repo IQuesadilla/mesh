@@ -3,7 +3,7 @@
 int main (int argc, char **argv)
 {
     std::shared_ptr<logcpp> logobj;
-    logobj.reset(new logcpp());
+    logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
 
     auto log = logobj->function("main");
 
@@ -24,7 +24,6 @@ int main (int argc, char **argv)
 
     temp->setBroadcastAlive(false);
     temp->initBroadcastSocket(avail[n]);
-    temp->initUpdateThread();
 
     char buffer;
     bool doLoop = true;
