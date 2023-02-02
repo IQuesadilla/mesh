@@ -56,6 +56,12 @@ ip_udp.o: src/ip/udp.cpp src/ip/udp.h src/ip/ip.h
 ip_ip.o: src/ip/ip.cpp src/ip/ip.h
 	$(CXX) $(OBJFLAGS)
 
+logcpp/liblogcpp.o:
+	make -C logcpp
+
+tinyxml2/tinyxml2.o:
+	make -C tinyxml2
+
 install: $(TARGET)
 	cp $(TARGET) /usr/local/lib 
 
