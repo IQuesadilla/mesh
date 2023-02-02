@@ -1,5 +1,10 @@
 # File Mesh
 
+## TO INSTALL
+```
+git clone --recurse-submodules https://github.com/IQuesadilla/mesh.git
+```
+
 ## Public Commands
 
 ```
