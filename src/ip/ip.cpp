@@ -48,7 +48,7 @@ const packet ip::recv()
     log << "Waiting for data to receive" << logcpp::loglevel::NOTE;
 
     struct sockaddr_in fromaddr;
-    socklen_t fromaddrlen;
+    socklen_t fromaddrlen = sizeof(fromaddr);
 
     int tempcount = recvfrom(fd,(void*)toreturn.raw,size,MSG_DONTWAIT,(struct sockaddr*)&fromaddr,&fromaddrlen);
     log << "tempcount: " << tempcount << logcpp::loglevel::VALUE;

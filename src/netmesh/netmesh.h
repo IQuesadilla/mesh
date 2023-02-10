@@ -129,6 +129,7 @@ private:
         int timeouttime;
     } flags;
 
+    struct ifaddrs * ifAddrStruct;
     std::shared_ptr<udp> bcsock;
     std::chrono::_V2::system_clock::time_point last_update;
     std::string myName;

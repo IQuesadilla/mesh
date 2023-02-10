@@ -9,6 +9,8 @@ netmesh::netmesh(std::shared_ptr<logcpp> logptr)
     auto log = logobj->function("netmesh");
     setBroadcastAlive(true);
     setUserPtr(nullptr);
+
+    connected = false;
 }
 
 netmesh::~netmesh()
@@ -45,6 +47,8 @@ int netmesh::initserver(std::string name,
 
     myaddr = ((sockaddr_in*)mesh.ifa_addr)->sin_addr.s_addr;
 
+    freeifaddrs(ifAddrStruct);
+
     int pipes[2];
     if (pipe(pipes) < 0)
         return -1;
@@ -71,7 +75,7 @@ std::vector<ifaddrs> netmesh::findAvailableMeshes()
     auto log = logobj->function("findAvailableMeshes");
     std::vector<ifaddrs> to_return;
 
-    struct ifaddrs * ifAddrStruct=NULL;
+    ifAddrStruct=NULL;
     struct ifaddrs * ifa=NULL;
 
     getifaddrs(&ifAddrStruct);
@@ -80,11 +84,12 @@ std::vector<ifaddrs> netmesh::findAvailableMeshes()
         if (ifa->ifa_ifu.ifu_broadaddr == NULL)
             continue;
 
+        if (ifa->ifa_addr->sa_family != AF_INET)
+            continue;
+
         //log << "Available mesh: " << tempbcaddr << logcpp::loglevel::NOTE;
         to_return.push_back(*ifa);
     }
-
-    freeifaddrs(ifAddrStruct);
 
     return to_return;
 }
