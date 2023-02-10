@@ -84,6 +84,8 @@ std::vector<ifaddrs> netmesh::findAvailableMeshes()
         to_return.push_back(*ifa);
     }
 
+    freeifaddrs(ifAddrStruct);
+
     return to_return;
 }
 
@@ -169,7 +171,9 @@ std::string netmesh::returnDevices()
     for (auto &x : devices)
         ss << "Name: " << x.first << std::endl
            << "  Address: " << x.second.address << std::endl
-           << "  Timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - x.second.timeout).count() ;
+           << "  Timeout: " << 
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()
+                - x.second.timeout).count() ;
 
     return ss.str();
 }
@@ -398,7 +402,8 @@ int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
 
     for (auto it = devices.cbegin(); it != devices.cend();)
     {
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - it->second.timeout) >= std::chrono::milliseconds(flags.timeouttime))
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()
+                - it->second.timeout) >= std::chrono::milliseconds(flags.timeouttime))
         {
             log << "Removing device from mesh" << logcpp::loglevel::NOTE;
             log << "Device: " << it->first << logcpp::loglevel::VALUE;
@@ -496,7 +501,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         // Read data from fifo and run callback with data
         int fifosize;
         ioctl(rfifo, FIONREAD, &fifosize);
-        char *buff = (char*)malloc(fifosize);
+        char buff[fifosize];
         read(rfifo,buff,fifosize);
 
         getIntMsgHandler()(std::string(buff,fifosize),getUserPtr());
@@ -541,7 +546,9 @@ void netmesh::updateThread()
         if ( !isConnected() )
             return;
             
-        temptimeout = std::chrono::milliseconds(flags.updatetime) - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch() - polltimeout);
+        temptimeout = std::chrono::milliseconds(flags.updatetime)
+            - std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()
+            - polltimeout);
     }
 
     if (getBroadcastAlive())
