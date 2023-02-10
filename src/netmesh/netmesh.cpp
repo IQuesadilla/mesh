@@ -21,7 +21,7 @@ netmesh::~netmesh()
 }
 
 int netmesh::initserver(std::string name,
-                        std::string mesh,
+                        ifaddrs mesh,
                         int bcport /*= 1999*/,
                         int tcpport /*= 1998*/,
                         int updatetime /*= 2000*/,
@@ -31,13 +31,19 @@ int netmesh::initserver(std::string name,
     if (connected == true)
         return 0;
 
-    connected = false;
-    setName(name);
-    initBroadcastSocket(mesh);
+    flags.bcport = bcport;
+    flags.tcpport = tcpport;
+    flags.updatetime = updatetime;
+    flags.timeouttime = timeouttime;
 
-    sockGeneral.reset(new udp(logobj));
-    sockGeneral->initSocket(0);
+    setName(name);
+    initBroadcastSocket( ((sockaddr_in*)mesh.ifa_ifu.ifu_broadaddr)->sin_addr.s_addr );
+
+    log << "Mesh IP: " << inet_ntoa(((sockaddr_in*)mesh.ifa_addr)->sin_addr) << logcpp::loglevel::VALUE;
+    sockGeneral.reset(new udp( logobj, ((sockaddr_in*)mesh.ifa_addr)->sin_addr.s_addr) );
     //sockGeneral->bindaddr();
+
+    myaddr = ((sockaddr_in*)mesh.ifa_addr)->sin_addr.s_addr;
 
     int pipes[2];
     if (pipe(pipes) < 0)
@@ -45,11 +51,6 @@ int netmesh::initserver(std::string name,
 
     rfifo = pipes[0];
     wfifo = pipes[1];
-
-    flags.bcport = bcport;
-    flags.tcpport = tcpport;
-    flags.updatetime = updatetime;
-    flags.timeouttime = timeouttime;
 
     myName = name;
     connected = true;
@@ -65,10 +66,10 @@ int netmesh::killserver()
     return 0;
 }
 
-std::vector<std::string> netmesh::findAvailableMeshes()
+std::vector<ifaddrs> netmesh::findAvailableMeshes()
 {
     auto log = logobj->function("findAvailableMeshes");
-    std::vector<std::string> to_return;
+    std::vector<ifaddrs> to_return;
 
     struct ifaddrs * ifAddrStruct=NULL;
     struct ifaddrs * ifa=NULL;
@@ -79,33 +80,29 @@ std::vector<std::string> netmesh::findAvailableMeshes()
         if (ifa->ifa_ifu.ifu_broadaddr == NULL)
             continue;
 
-        std::string tempbcaddr = inet_ntoa(((sockaddr_in*)ifa->ifa_ifu.ifu_broadaddr)->sin_addr);
         //log << "Available mesh: " << tempbcaddr << logcpp::loglevel::NOTE;
-        to_return.push_back(tempbcaddr);
+        to_return.push_back(*ifa);
     }
 
     return to_return;
 }
 
-int netmesh::initBroadcastSocket(std::string addr)
+int netmesh::initBroadcastSocket(in_addr_t addr)
 {
     auto log = logobj->function("initBroadcastSocket");
-    connected = false;
 
-    bcaddr.sin_addr.s_addr = inet_addr(addr.c_str());
+    bcaddr = addr;
 
-    bcsock.reset(new udp(logobj));
-
-    log << "Running initSocket" << logcpp::loglevel::NOTE;
-    bcsock->initSocket(flags.bcport);
+    log << "Creating bc socket" << logcpp::loglevel::NOTE;
+    bcsock.reset(new udp(logobj,0,-1));
 
     const int trueFlag = 1;
     if (setsockopt(bcsock->topoll(0).fd, SOL_SOCKET, SO_BROADCAST, &trueFlag, sizeof(trueFlag)) < 0)
         return errno;
 
-    bcsock->bindaddr();
+    log << "Binding to port: " << flags.bcport << logcpp::loglevel::VALUE;
+    bcsock->bindaddr(addr,flags.bcport);
 
-    connected = true;
     return 0;
 }
 
@@ -182,16 +179,15 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::stri
     auto log = logobj->function("registerUDP");
 
     std::shared_ptr<udp> conn;
-    conn.reset(new udp(logobj));
-    findAvailablePort(conn);
+    conn.reset(new udp(logobj,myaddr));
 
     myservice newconn;
     newconn.name = servname;
     newconn.connptr = conn;
     newconn.callback = fn;
     newconn.ipt = iptype::UDP;
-    myservices.insert(std::make_pair(conn->port(),newconn));
-    return conn->port();
+    myservices.insert(std::make_pair(conn->getport(),newconn));
+    return conn->getport();
 }
 
 std::shared_ptr<logcpp> netmesh::getLogger()
@@ -270,7 +266,7 @@ int netmesh::broadcastAlive()
     packet data;
     data.raw = print->CStr();
     data.length = print->CStrSize()+1;
-    data.addr = bcaddr.sin_addr.s_addr;
+    data.addr = bcaddr;
 
     if (bcsock->send(data))
         log << "oof" << logcpp::loglevel::NOTE;
@@ -438,16 +434,23 @@ int netmesh::checkforconn()
     return 0;
 }
 */
-
+/*
 bool netmesh::findAvailablePort(std::shared_ptr<ip> netobj)
 {
     auto log = logobj->function("findAvailablePort");
 
-    uint16_t toreturn;
-    while(netobj->bindaddr())
-    return toreturn;
+    /*
+    int port = flags.bcport;
+    do {
+        log << "Attempting port " << port << logcpp::loglevel::VALUE;
+        netobj->port(port++);
+    } while(netobj->bindaddr());
+    *-/
+   netobj->port(0);
+   netobj->bindaddr();
+    return true;
 }
-
+*/
 bool netmesh::pollAll(std::chrono::milliseconds timeout)
 {
     auto log = logobj->function("pollAll");

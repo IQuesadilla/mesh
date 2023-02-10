@@ -9,7 +9,7 @@
 void ip::setLogcpp(std::shared_ptr<logcpp> logptr)
 {
     logobj = logptr;
-    auto log = logobj->function("setlogcpp");
+    auto log = logobj->function("ip::setlogcpp");
 }
 
 bool ip::send(const packet raw)
@@ -17,13 +17,13 @@ bool ip::send(const packet raw)
     auto log = logobj->function("ip::send");
     log << "Length: " << raw.length << logcpp::loglevel::VALUE;
     log << "Address: " << inet_ntoa( in_addr{raw.addr} ) << logcpp::loglevel::VALUE;
-    log << "Port: " << port() << logcpp::loglevel::VALUE;
+    log << "Port: " << ntohs(getport()) << logcpp::loglevel::VALUE;
 
     sockaddr_in who;
     memset (&who, '\0', sizeof(who));
 
     who.sin_family = AF_INET;
-    who.sin_port = htons(port());
+    who.sin_port = getport();
     who.sin_addr.s_addr = raw.addr;
 
     ssize_t bytes_sent = sendto(fd,raw.raw,raw.length,0,(sockaddr*)&who,sizeof(who));
@@ -62,16 +62,39 @@ const packet ip::recv()
     return toreturn;
 }
 
-int ip::port(int setport = -1)
+int ip::getport()
 {
-    if (setport < 0)
-        _port = setport;
-    return _port;
+    sockaddr_in sin;
+    socklen_t len = sizeof(sin);
+    getsockname(fd,(struct sockaddr *)&sin, &len);
+    return sin.sin_port;
+}
+
+int ip::bindaddr(in_addr_t addr, int port /*= 0*/)
+{
+    auto log = logobj->function("ip::bindaddr");
+    sockaddr_in ipaddr;
+    memset (&ipaddr, '\0', sizeof(ipaddr));
+
+    ipaddr.sin_family = AF_INET;
+    ipaddr.sin_addr.s_addr = addr;
+    ipaddr.sin_port = port;
+    log << "Address to bind: " << inet_ntoa(ipaddr.sin_addr) << logcpp::loglevel::VALUE;
+
+    errno = 0;
+    if (bind(fd, (const struct sockaddr *)&ipaddr, sizeof(ipaddr)) < 0)
+    {
+        log << "Failed to bind socket" << logcpp::loglevel::WARNING;
+        log << "Errno: " << errno << logcpp::loglevel::VALUE;
+        return 1;
+    }
+    log << "Port: " << getport() << logcpp::loglevel::VALUE;
+    return 0;
 }
 
 pollfd ip::topoll(short int events)
 {
-    auto log = logobj->function("topoll");
+    auto log = logobj->function("ip::topoll");
     pollfd toreturn;
     toreturn.fd = fd;
     toreturn.events = events;

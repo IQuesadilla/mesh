@@ -67,11 +67,12 @@ int main(int argc, char *argv[])
     int n = 0;
     for (auto x : avail)
     {
-        std::cout << n++ << ": " << x << std::endl;
+        std::cout << n++ << ": " << x.ifa_name << std::endl;
     }
 
     std::cin >> n;
-    std::cout << "Log: Selected " << avail[n] << " mesh" << std::endl;
+    std::cout << "Log: Selected " << avail[n].ifa_name << " mesh" << std::endl;
+    std::cout << "Value: myip: " << inet_ntoa( ((sockaddr_in*)(avail[n].ifa_addr))->sin_addr ) << std::endl;
 
     log << "Running init server with defaults" << logcpp::loglevel::NOTE;
     mesh1->initserver(std::string(argv[1]), avail[n]);

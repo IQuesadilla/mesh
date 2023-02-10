@@ -3,23 +3,30 @@
 #include <cstring>
 #include <iostream>
 
-udp::udp(std::shared_ptr<logcpp> logobj, uint port /*= 0*/)
+udp::udp(std::shared_ptr<logcpp> logobj, in_addr_t addr, int port /*= 0*/)
 {
     setLogcpp(logobj);
-    initSocket(port);
+    initSocket();
+    
+    if (port < 0)
+        return;
+
+    bindaddr(addr, port);
+
 }
 
-bool udp::initSocket(uint setport)
+bool udp::initSocket()
 {
-    std::cout << "Log: (testconn)" << std::endl;
+    auto log = logobj->function("udp::initSocket");
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
     {
-        std::cout << "Error: Failed to open socket" << std::endl;
+        log << "Failed to open socket" << logcpp::loglevel::ERROR;
         return errno;
     }
 
-    std::cout << "Value: fd: " << fd << std::endl;
+    log << "fd: " << fd << logcpp::loglevel::VALUE;
 
+    /*
     //std::cout << bcsock << std::endl;
     const int trueFlag = 1;
     if (setsockopt(fd,SOL_SOCKET,SO_REUSEADDR,&trueFlag,sizeof(trueFlag)) < 0)
@@ -27,24 +34,8 @@ bool udp::initSocket(uint setport)
         std::cout << "Error: Failed to setsockopt" << std::endl;
         return errno;
     }
+    */
 
-    port(setport);
+    //port(setport);
     return true;
-}
-
-int udp::bindaddr(std::string addr /*= "0.0.0.0"*/)
-{
-    sockaddr_in udpaddr;
-    memset (&udpaddr, '\0', sizeof(udpaddr));
-
-    udpaddr.sin_family = AF_INET;
-    udpaddr.sin_addr.s_addr = inet_addr(addr.c_str()); // TODO might not work? untested
-    udpaddr.sin_port = htons(port());
-
-    if (bind(fd, (const struct sockaddr *)&udpaddr, sizeof(udpaddr)) < 0)
-    {
-        std::cout << "Error: Failed to bind socket" << std::endl;
-        return errno;
-    }
-    return 0;
 }

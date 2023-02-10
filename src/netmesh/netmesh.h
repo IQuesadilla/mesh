@@ -33,6 +33,7 @@
                 - Timeout time
             - Leaving the mesh
         Finish findAvailablePort
+        Update findAvailableMeshes to show device name
 */
 
 class netmesh
@@ -49,16 +50,16 @@ public:
     ~netmesh();
 
     int initserver( std::string name,
-                    std::string mesh,
+                    ifaddrs mesh,
                     int bcport = 1999,
                     int tcpport = 1998,
                     int updatetime = 2000,
                     int timeouttime = 10000);
     int killserver();
 
-    std::vector<std::string> findAvailableMeshes();
+    std::vector<ifaddrs> findAvailableMeshes();
 
-    int initBroadcastSocket(std::string addr);
+    int initBroadcastSocket(in_addr_t addr);
     //int initListenSocket(std::string myaddr = "0.0.0.0");
 
     bool isConnected();
@@ -116,7 +117,6 @@ private:
     int updateDeviceList(std::string devname, netmesh::device devobj);
 
     //int checkforconn();
-    bool findAvailablePort(std::shared_ptr<ip> netobj);
     bool pollAll(std::chrono::milliseconds timeout);
     void updateThread();
 
@@ -133,7 +133,8 @@ private:
     std::chrono::_V2::system_clock::time_point last_update;
     std::string myName;
     bool connected;
-    sockaddr_in bcaddr;
+    in_addr_t bcaddr;
+    in_addr_t myaddr;
     std::map<std::string, device> devices;
     std::map<uint16_t,myservice> myservices;
     std::shared_ptr<udp> sockGeneral;

@@ -29,18 +29,18 @@ public:
 
     void setLogcpp(std::shared_ptr<logcpp> logptr);
 
-    virtual bool initSocket(uint port) = 0;
+    virtual bool initSocket() = 0;
 
     bool send(const packet raw);
     const packet recv();
 
-    int port(int setport = -1);
+    int getport();
+    int bindaddr(in_addr_t addr, int port = 0);
 
     pollfd topoll(short int events);
 
 protected:
     int fd;
-    int _port;
     std::shared_ptr<logcpp> logobj;
 };
 
