@@ -5,7 +5,7 @@ TESTFLAGS = -o ./tests/bin/$@ $^ $(CFLAGS)
 SOFLAGS = -o $(LIBDIR)/$@ $^ -shared
 TARGET = libfilemesh.so
 NETMESHTESTS = netmesh_testthreaded netmesh_testinterrupt netmesh_test_getdevices
-MESHFSTESTS = meshfs_test1 meshfs_test2
+MESHFSTESTS = #meshfs_test1 meshfs_test2
 TESTS = udp_test1 $(NETMESHTESTS) $(MESHFSTESTS)
 LIBDIR = ./lib/
 

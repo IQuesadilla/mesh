@@ -15,15 +15,15 @@ int main (int argc, char **argv)
     int n = 0;
     for (auto x : avail)
     {
-        std::cout << n++ << ": " << x << std::endl;
+        std::cout << n++ << ": " << x.ifa_addr << std::endl;
     }
 
     std::cin >> n;
 
-    std::cout << "Log: Selected " << avail[n] << std::endl;
+    std::cout << "Log: Selected " << avail[n].ifa_addr << std::endl;
 
     temp->setBroadcastAlive(false);
-    temp->initBroadcastSocket(avail[n]);
+    temp->initserver("",avail[n]);
 
     char buffer;
     bool doLoop = true;

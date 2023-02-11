@@ -50,10 +50,11 @@ int main(int argc, char *argv[])
     logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
     auto log = logobj->function("main");
 
-    udp serversocket(logobj), clientsocket(logobj);
-    serversocket.initSocket(PORT);
-    clientsocket.initSocket(PORT);
-    serversocket.bindaddr();
+    auto loopback = inet_addr( "127.0.0.1" );
+    udp serversocket(logobj,loopback), clientsocket(logobj,loopback);
+    serversocket.initSocket();
+    clientsocket.initSocket();
+    //serversocket.bindaddr(0);
 
     std::thread serverthread(server,&serversocket);
     std::thread clientthread(client,&clientsocket);
