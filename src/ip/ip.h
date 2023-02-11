@@ -16,7 +16,7 @@
 struct packet
 {
     const char *raw;
-    size_t length;
+    ssize_t length;
     in_addr_t addr;
 };
 

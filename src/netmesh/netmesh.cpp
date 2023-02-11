@@ -114,7 +114,7 @@ int netmesh::initBroadcastSocket(in_addr_t addr)
 }
 
 /*
-int netmesh::initListenSocket(std::string myaddr /*= "0.0.0.0"*)
+int netmesh::initListenSocket(std::string myaddr *= "0.0.0.0"*)
 {
     auto log = logobj->function("initListenSocket");
     if ((listensock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -331,7 +331,7 @@ int netmesh::parseUpdate(packet input)
 
                     newdev.services.insert(tempserv);
                 }
-                while ( serv = serv->NextSiblingElement("serv") );
+                while ( ( serv = serv->NextSiblingElement("serv") ) );
             
             log << "Device Name: " << devname << logcpp::loglevel::VALUE;
             //log << "Device Timeout: " << newdev.timeout << std::endl;
@@ -351,7 +351,7 @@ int netmesh::parseUpdate(packet input)
             return -1;
         }
     }
-    while ( root = root->NextSiblingElement() );
+    while ( ( root = root->NextSiblingElement() ) );
 
     return -1;
 }
@@ -391,7 +391,6 @@ int netmesh::updateDeviceList(std::string devname, netmesh::device devobj)
         log << "NAME " << devname << logcpp::loglevel::VALUE;
     if (devname == myName)
         return 1;
-    auto settimeout = std::chrono::system_clock::now();
 
     bool newdev = false;
     if (devices.find(devname) == devices.end())
@@ -442,23 +441,6 @@ int netmesh::checkforconn()
         //myservices.push_back({name, newfd});
     }
     return 0;
-}
-*/
-/*
-bool netmesh::findAvailablePort(std::shared_ptr<ip> netobj)
-{
-    auto log = logobj->function("findAvailablePort");
-
-    /*
-    int port = flags.bcport;
-    do {
-        log << "Attempting port " << port << logcpp::loglevel::VALUE;
-        netobj->port(port++);
-    } while(netobj->bindaddr());
-    *-/
-   netobj->port(0);
-   netobj->bindaddr();
-    return true;
 }
 */
 bool netmesh::pollAll(std::chrono::milliseconds timeout)

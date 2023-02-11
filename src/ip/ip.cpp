@@ -43,7 +43,6 @@ const packet ip::recv()
     log << "Size: " << size << logcpp::loglevel::VALUE;
 
     toreturn.raw = (char*)malloc(size);
-    int total = 0;
 
     log << "Waiting for data to receive" << logcpp::loglevel::NOTE;
 

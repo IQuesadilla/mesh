@@ -1,15 +1,17 @@
 CXX = g++
-CFLAGS = -std=c++17 -fPIC 
+CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3
 OBJFLAGS = -o $@ -c $< $(CFLAGS)
 TESTFLAGS = -o ./tests/bin/$@ $^ $(CFLAGS)
 SOFLAGS = -o $(LIBDIR)/$@ $^ -shared
-TARGET = libfilemesh.so
+SHARED = libnetmesh.so
 NETMESHTESTS = netmesh_testthreaded netmesh_testinterrupt netmesh_test_getdevices
-MESHFSTESTS = #meshfs_test1 meshfs_test2
+MESHFSTESTS = meshfs_test1 meshfs_test2
 TESTS = udp_test1 $(NETMESHTESTS) $(MESHFSTESTS)
 LIBDIR = ./lib/
 
-all: $(TARGET)
+all: $(SHARED) $(TESTS)
+
+shared: $(SHARED)
 
 tests: $(TESTS)
 
