@@ -183,7 +183,7 @@ std::string netmesh::returnDevices()
     return ss.str();
 }
 
-uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn)
+uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn, void *ptr)
 {
     auto log = logobj->function("registerUDP");
 
@@ -194,6 +194,7 @@ uint16_t netmesh::registerUDP(std::string servname, std::function<void(std::stri
     newconn.name = servname;
     newconn.connptr = conn;
     newconn.callback = fn;
+    newconn.userptr = ptr;
     newconn.ipt = iptype::UDP;
     myservices.insert(std::make_pair(conn->getport(),newconn));
     return conn->getport();
@@ -512,7 +513,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
                     devname = x.first;
             
             std::vector<char> ipdata ( data.raw, &data.raw[data.length] );
-            it->second.callback(devname,&ipdata,getUserPtr());
+            it->second.callback(devname,&ipdata,it->second.userptr);
             --count;
         }
 

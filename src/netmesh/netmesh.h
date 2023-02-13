@@ -65,10 +65,11 @@ public:
     bool isConnected();
 
     int serviceSend(std::string devname, std::string servname, netdata *data);
+    int serviceBroadcast(std::string servname, netdata *data);
 
     std::string returnDevices();
 
-    uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn);
+    uint16_t registerUDP(std::string servname, std::function<void(std::string,netdata*,void*)> fn, void *ptr);
 
     std::shared_ptr<logcpp> getLogger();
     void setLogger(std::shared_ptr<logcpp> log);
@@ -106,6 +107,7 @@ private:
         iptype ipt;
         std::shared_ptr<ip> connptr;
         std::function<void(std::string,netdata*,void*)> callback;
+        void *userptr;
     };
 
 

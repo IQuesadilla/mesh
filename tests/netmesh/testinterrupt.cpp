@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     if (timer_settime(ti, 0, &its, NULL) == -1)
         log << "Failed to set timer " << errno << logcpp::loglevel::ERROR;
 
-    mesh1->registerUDP("serv1",mycallback);
+    mesh1->registerUDP("serv1",mycallback,nullptr);
     mesh1->runForever();
 
     timer_delete(ti);
