@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     }
 
     std::shared_ptr<logcpp> logobj;
-    logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
+    logobj.reset(new logcpp(logcpp::vlevel::DEBUG));
     auto log = logobj->function("main");
 
     log << "Creating shared pointer for netmesh" << logcpp::loglevel::NOTE;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     log << "Resetting with new netmesh object" << logcpp::loglevel::NOTE;
     mesh1.reset(new netmesh(logobj));
 
-    mesh1->setUserPtr(&logobj);
+    //mesh1->setUserPtr(&logobj);
 
     log << "Finding available meshes" << logcpp::loglevel::NOTE;
     auto avail = mesh1->findAvailableMeshes();
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     log << "Running init server with defaults" << logcpp::loglevel::NOTE;
     mesh1->initserver(std::string(argv[1]), avail[n]);
 
-    mesh1->registerUDP("serv1",mycallback);
+    mesh1->registerUDP("serv1",mycallback,&logobj);
 
     std::thread mythread (&netmesh::runForever,mesh1.get());
 

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     doloopcount = 10;
 
     std::shared_ptr<logcpp> logobj;
-    logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
+    logobj.reset(new logcpp(logcpp::vlevel::DEBUG));
     auto log = logobj->function("main");
 
     log << "Resetting with new netmesh object" << logcpp::loglevel::NOTE;

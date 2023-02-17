@@ -3,7 +3,7 @@
 int main (int argc, char **argv)
 {
     std::shared_ptr<logcpp> logobj;
-    logobj.reset(new logcpp(logcpp::vlevel::DEFAULT));
+    logobj.reset(new logcpp(logcpp::vlevel::DEBUG));
 
     auto log = logobj->function("main");
 
