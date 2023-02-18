@@ -14,7 +14,7 @@ void mycallback(std::string name, netmesh::netdata* data, void* userptr)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 2)
     {
         std::cerr << "Not enough arguments" << std::endl;
         return -1;

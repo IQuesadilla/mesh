@@ -2,7 +2,6 @@
 #include <signal.h>
 
 std::unique_ptr<netmesh> mesh1;
-std::string who;
 int doloopcount;
 
 void alarm_interrupt(int sig, siginfo_t *si, void *uc)
@@ -38,18 +37,17 @@ void myalarmcallback(std::string data, void* userptr)
     std::vector<char> datavec (datastring.begin(),datastring.end());
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
-    mesh1->serviceSend(who, "serv1", &datavec);
+    mesh1->serviceBroadcast("serv1", &datavec);
 }
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 2)
     {
         std::cerr << "Not enough arguments" << std::endl;
         return -1;
     }
 
-    who = argv[2];
     doloopcount = 10;
 
     std::shared_ptr<logcpp> logobj;
