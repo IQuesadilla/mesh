@@ -7,7 +7,7 @@ int doloopcount;
 
 void alarm_interrupt(int sig, siginfo_t *si, void *uc)
 {
-    auto log = mesh1->getLogger()->function("alarm_interrupt");
+    //std::cout << "Running alarm_interrupt" << std::endl;
     mesh1->interruptMsg("It works! ijk");
 }
 
@@ -20,6 +20,11 @@ void mycallback(std::string name, netmesh::netdata* data, void* userptr)
     log << "Name: " << name << logcpp::loglevel::VALUE;
     log << "Length: " << data->size() << logcpp::loglevel::VALUE;
     log << "Data: " << std::string(data->begin(),data->end()) << logcpp::loglevel::VALUE;
+
+    if (--doloopcount == 0)
+    {
+        mesh1->killserver();
+    }
 }
 
 void myalarmcallback(std::string data, void* userptr)
@@ -34,11 +39,6 @@ void myalarmcallback(std::string data, void* userptr)
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
     mesh1->serviceSend(who, "serv1", &datavec);
-
-    if (--doloopcount == 0)
-    {
-        mesh1->killserver();
-    }
 }
 
 int main(int argc, char *argv[])
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     if (timer_settime(ti, 0, &its, NULL) == -1)
         log << "Failed to set timer " << errno << logcpp::loglevel::ERROR;
 
-    mesh1->registerUDP("serv1",mycallback,nullptr);
+    mesh1->registerUDP("serv1",mycallback,&logobj);
     mesh1->runForever();
 
     timer_delete(ti);
