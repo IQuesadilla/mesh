@@ -17,13 +17,13 @@ bool ip::send(const packet raw)
     auto log = logobj->function("ip::send");
     log << "Length: " << raw.length << logcpp::loglevel::VALUE;
     log << "Address: " << inet_ntoa( in_addr{raw.addr} ) << logcpp::loglevel::VALUE;
-    log << "Port: " << ntohs(getport()) << logcpp::loglevel::VALUE;
+    log << "Port: " << getport() << logcpp::loglevel::VALUE;
 
     sockaddr_in who;
     memset (&who, '\0', sizeof(who));
 
     who.sin_family = AF_INET;
-    who.sin_port = getport();
+    who.sin_port = htons(getport());
     who.sin_addr.s_addr = raw.addr;
 
     ssize_t bytes_sent = sendto(fd,raw.raw,raw.length,0,(sockaddr*)&who,sizeof(who));
@@ -66,7 +66,7 @@ int ip::getport()
     sockaddr_in sin;
     socklen_t len = sizeof(sin);
     getsockname(fd,(struct sockaddr *)&sin, &len);
-    return sin.sin_port;
+    return ntohs(sin.sin_port);
 }
 
 int ip::bindaddr(in_addr_t addr, int port /*= 0*/)
@@ -77,7 +77,7 @@ int ip::bindaddr(in_addr_t addr, int port /*= 0*/)
 
     ipaddr.sin_family = AF_INET;
     ipaddr.sin_addr.s_addr = addr;
-    ipaddr.sin_port = port;
+    ipaddr.sin_port = htons(port);
     log << "Address to bind: " << inet_ntoa(ipaddr.sin_addr) << logcpp::loglevel::VALUE;
 
     errno = 0;
