@@ -172,7 +172,9 @@ int netmesh::serviceBroadcast(std::string servname, netdata *data)
 
     for (auto &x : devices)
         if ( x.second.services.find(servname) != x.second.services.end() )
-            serviceSend(x.first,servname,data);
+            serviceSend(x.first,servname,data); 
+
+    return 0;
 }
 
 std::string netmesh::returnDevices()
@@ -281,13 +283,21 @@ int netmesh::broadcastAlive()
     auto log = logobj->function("broadcastAlive");
     tinyxml2::XMLPrinter *print = generateUpdate();
 
+    if (print == nullptr)
+    {
+        log << "Failed to generate update" << logcpp::loglevel::WARNING;
+        return 1;
+    }
+
     packet data;
     data.raw = print->CStr();
-    data.length = print->CStrSize()+1;
+    data.length = print->CStrSize();
     data.addr = bcaddr;
 
     if (bcsock->send(data))
         log << "oof" << logcpp::loglevel::NOTE;
+
+    delete print;
     return 0;
 }
 
@@ -490,6 +500,7 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
         auto resp = bcsock->recv();
 
         parseUpdate(resp);
+        delete[] resp.raw;
         --count;
     }
     else if (fds[1].revents == POLLIN)
@@ -523,6 +534,8 @@ bool netmesh::pollAll(std::chrono::milliseconds timeout)
             std::vector<char> ipdata ( data.raw, &data.raw[data.length] );
             it->second.callback(devname,&ipdata,it->second.userptr);
             --count;
+
+            delete[] data.raw;
         }
 
         it++;

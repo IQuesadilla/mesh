@@ -46,7 +46,7 @@ const packet ip::recv()
     ioctl(fd, FIONREAD, &size);
     log << "Size: " << size << logcpp::loglevel::VALUE;
 
-    toreturn.raw = (char*)malloc(size);
+    toreturn.raw = new char[size];
 
     log << "Waiting for data to receive" << logcpp::loglevel::NOTE;
 
