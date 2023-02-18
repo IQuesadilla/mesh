@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     std::vector<char> datavec (datastring.begin(),datastring.end());
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
-    mesh1->serviceSend(argv[2], "serv1", &datavec);
+    mesh1->serviceBroadcast("serv1", &datavec);
 
     log << "Delaying for 10s to give time for other to send" << logcpp::loglevel::NOTE;
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
