@@ -31,7 +31,7 @@ public:
 
     virtual bool initSocket() = 0;
 
-    bool send(const packet raw);
+    bool send(const packet raw, int port = -1);
     const packet recv();
 
     int getport();

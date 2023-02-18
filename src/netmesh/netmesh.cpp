@@ -160,9 +160,20 @@ int netmesh::serviceSend(std::string devname, std::string servname, netdata *dat
     tosend.raw = data->data();
     tosend.length = data->size();
 
+    /*
     for (auto &x : myservices)
         if (x.second.name == servname)
             x.second.connptr->send(tosend);
+    */
+
+    int sendport = -1;
+    for (auto &x : devices)
+        if (x.first == devname)
+            for (auto &y : x.second.services)
+                if (y.first == servname)
+                    sendport = y.second.port;
+
+    sockGeneral->send(tosend, sendport);
 
     return 0;
 }

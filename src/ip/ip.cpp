@@ -12,7 +12,7 @@ void ip::setLogcpp(std::shared_ptr<logcpp> logptr)
     auto log = logobj->function("ip::setlogcpp");
 }
 
-bool ip::send(const packet raw)
+bool ip::send(const packet raw, int port /*= -1*/)
 {
     auto log = logobj->function("ip::send");
     log << "Length: " << raw.length << logcpp::loglevel::VALUE;
@@ -23,8 +23,12 @@ bool ip::send(const packet raw)
     memset (&who, '\0', sizeof(who));
 
     who.sin_family = AF_INET;
-    who.sin_port = htons(getport());
     who.sin_addr.s_addr = raw.addr;
+
+    if (port < 0)
+        who.sin_port = htons(getport());
+    else
+        who.sin_port = htons(port);
 
     ssize_t bytes_sent = sendto(fd,raw.raw,raw.length,0,(sockaddr*)&who,sizeof(who));
     if (bytes_sent == raw.length)
