@@ -19,11 +19,6 @@ void mycallback(std::string name, netmesh::netdata* data, void* userptr)
     log << "Name: " << name << logcpp::loglevel::VALUE;
     log << "Length: " << data->size() << logcpp::loglevel::VALUE;
     log << "Data: " << std::string(data->begin(),data->end()) << logcpp::loglevel::VALUE;
-
-    if (--doloopcount == 0)
-    {
-        mesh1->killserver();
-    }
 }
 
 void myalarmcallback(std::string data, void* userptr)
@@ -38,6 +33,11 @@ void myalarmcallback(std::string data, void* userptr)
 
     log << "Sending some data" << logcpp::loglevel::NOTE;
     mesh1->serviceBroadcast("serv1", &datavec);
+
+    if (--doloopcount == 0)
+    {
+        mesh1->killserver();
+    }
 }
 
 int main(int argc, char *argv[])
@@ -58,7 +58,6 @@ int main(int argc, char *argv[])
     mesh1.reset(new netmesh(logobj));
 
     mesh1->setIntMsgHandler(myalarmcallback);
-    mesh1->setUserPtr(&logobj);
 
     log << "Finding available meshes" << logcpp::loglevel::NOTE;
     auto avail = mesh1->findAvailableMeshes();
