@@ -1,4 +1,16 @@
-# File Mesh
+# Mesh
+
+## TODO
+- [ ] Remove dependencies on logcpp and tinyxml2 and replace with libQ
+- [ ] Fix the Makefile and the include paths
+- [ ] Turn ip, udp, and tcp into one file
+- [ ] Design a backend agnostic C++ interface (maybe with typedef)
+- [ ] Turn netmesh into mesh and make it backend agnostic
+- [ ] Turn the ip file into a proper backend
+- [ ] Create a wiringPi backend
+- [ ] Implement shm as a backend
+- [ ] Update README with up-to-date information
+- [ ] Finally can set the repo to public again
 
 ## TO INSTALL
 ```
