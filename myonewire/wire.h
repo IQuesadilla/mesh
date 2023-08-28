@@ -30,7 +30,7 @@ public:
 
         isRecieving = false;
         isSending = false;
-        msgcount = 0;
+        msgcount = 1;
     }
 
     ~owm() {}
@@ -60,7 +60,7 @@ public:
 
         wire_send(3);
 
-        msgcount = 0;
+        msgcount = 1;
         isSending = false;
     }
 

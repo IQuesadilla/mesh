@@ -1,7 +1,7 @@
 #include "wire.h"
 #include <string>
 #include <thread>
-#include <curses.h>
+#include <cstring>
 
 class myowm : public owm
 {

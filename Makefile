@@ -1,5 +1,5 @@
 CXX = g++
-CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3
+CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3 -I include
 OBJFLAGS = -o $@ -c $< $(CFLAGS)
 
 LIBDIR = lib/
@@ -38,6 +38,9 @@ $(TBIN)/netmesh_testinterrupt: tests/netmesh/testinterrupt.cpp netmesh.o ip_ip.o
 $(TBIN)/netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/logcpp.o tinyxml2/tinyxml2.o
 	$(CXX) $(TESTFLAGS) -lpthread
 
+shm_test1: tests/shm/test1.cpp backend_shm.o
+	$(CXX) $(TESTFLAGS) -lpthread
+
 
 #------Shared Objects------
 $(LIBDIR)/libfilemesh.so: filemesh.o netmesh.o meshfs.o
@@ -71,6 +74,9 @@ logcpp/logcpp.o:
 
 tinyxml2/tinyxml2.o:
 	$(MAKE) -C tinyxml2
+
+backend_shm.o: src/backends/shm.cpp include/backends/shm.h
+	$(CXX) $(OBJFLAGS)
 
 
 #------Clean Up------
