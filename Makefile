@@ -1,5 +1,5 @@
 CXX = g++
-CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3 -I include
+CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3 -Iinclude/ -IlibQ/include/ -LlibQ/ -lQ
 OBJFLAGS = -o $@ -c $< $(CFLAGS)
 
 LIBDIR = lib/
@@ -10,13 +10,11 @@ TBIN = tests/bin/
 TESTFLAGS = -o $@ $^ $(CFLAGS)
 NETMESHTESTS = $(TBIN)/netmesh_testthreaded $(TBIN)/netmesh_testinterrupt $(TBIN)/netmesh_test_getdevices
 MESHFSTESTS = $(TBIN)/meshfs_test1 $(TBIN)/meshfs_test2
-TESTS = $(TBIN)/udp_test1 $(NETMESHTESTS) $(MESHFSTESTS)
 
+.PHONY: all shared tests
 all: $(SHARED) $(TESTS)
-
 shared: $(SHARED)
-
-tests: $(TESTS)
+tests: $(TBIN)/shm_test1
 
 
 #------Tests------
@@ -38,7 +36,7 @@ $(TBIN)/netmesh_testinterrupt: tests/netmesh/testinterrupt.cpp netmesh.o ip_ip.o
 $(TBIN)/netmesh_test_getdevices: tests/netmesh/getdevices.cpp netmesh.o ip_ip.o ip_udp.o logcpp/logcpp.o tinyxml2/tinyxml2.o
 	$(CXX) $(TESTFLAGS) -lpthread
 
-shm_test1: tests/shm/test1.cpp backend_shm.o
+$(TBIN)/shm_test1: tests/shm/test1.cpp backend_shm.o backend.o
 	$(CXX) $(TESTFLAGS) -lpthread
 
 
@@ -69,13 +67,10 @@ ip_udp.o: src/ip/udp.cpp src/ip/udp.h src/ip/ip.h
 ip_ip.o: src/ip/ip.cpp src/ip/ip.h
 	$(CXX) $(OBJFLAGS)
 
-logcpp/logcpp.o:
-	$(MAKE) -C logcpp
-
-tinyxml2/tinyxml2.o:
-	$(MAKE) -C tinyxml2
-
 backend_shm.o: src/backends/shm.cpp include/backends/shm.h
+	$(CXX) $(OBJFLAGS)
+
+backend.o: src/backend.cpp include/backend.h
 	$(CXX) $(OBJFLAGS)
 
 
@@ -84,5 +79,3 @@ clean:
 	-rm *.o
 	-rm $(TBIN)/*
 	-rm $(LIBDIR)/*
-	-$(MAKE) -C logcpp clean
-	-$(MAKE) -C tinyxml2 clean
