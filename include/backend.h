@@ -11,6 +11,8 @@
 class mesh_backend
 {
 public:
+    virtual ~mesh_backend();
+
     void loop();
 
     virtual uint32_t send_callback( char *data, uint32_t len ) = 0;
@@ -31,7 +33,6 @@ protected:
     bool decrement_start_delay, waiting_for_start;
 
     mesh_backend(int delayms, int buffsize, int ID);
-    ~mesh_backend();
 
     void wire_send();
     void wire_recv(int8_t QueueBit = 7, uint16_t inQueuePosition = 0);

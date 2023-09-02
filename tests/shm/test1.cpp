@@ -2,10 +2,12 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <vector>
 #include <thread>
 
-#define RUN_COUNT 2
-#define TEST_COUNT 1
+#define RUN_COUNT 3
+#define DEVICE_COUNT 4
+#define SPEEDS 100
 
 const std::string mbuff = "\
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
@@ -20,7 +22,7 @@ non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\
 class myshm : public shm_backend
 {
 public:
-    myshm( int delayms, int buffsize, int ID, bool *results, std::shared_ptr<libQ::log> log ) : shm_backend( delayms, buffsize, ID )
+    myshm( int delayms, int buffsize, int ID, std::vector<bool> *results, std::shared_ptr<libQ::log> log ) : shm_backend( delayms, buffsize, ID )
     {
         cPos = 0;
         mLen = mbuff.length();
@@ -32,6 +34,22 @@ public:
         recvCount = 0;
         doLoop = true;
         doSend = true;
+    }
+
+    ~myshm()
+    {
+        auto log = _log->function("~myshm");
+        //delete current_thread.get();
+    }
+
+    void kill()
+    {
+        doLoop = false;
+    }
+
+    void waitForDeath()
+    {
+        current_thread->join();
     }
 
     uint32_t send_callback( char *data, uint32_t len )
@@ -52,14 +70,16 @@ public:
 
         log << _ct->timestamp() << " From: " << devID << " Received: " << result << libQ::loglevel::VALUEDEBUG;
 
-        _results[recvCount] = success;
+        _results->push_back(success);
         ++recvCount;
         return;
     }
 
+    std::shared_ptr<std::thread> current_thread;
+
     unsigned int cPos;
     unsigned int mLen;
-    bool *_results;
+    std::vector<bool> *_results;
 
     int recvCount;
     bool doLoop;
@@ -85,47 +105,54 @@ void server_thread(myshm *mesh)
 int main()
 {
     libQ::log logobj(libQ::vlevel::DEBUG);
+    int speeds[] = {SPEEDS};
+    int speed_count = sizeof(speeds)/sizeof(*speeds);
 
     std::cout << "Running automated test suite!!!\n";
-    std::cout << "This will run the shm backend at " << TEST_COUNT << " speeds and return the results." << std::endl;
+    std::cout << "This will run the shm backend at " << speed_count << " speeds and return the results." << std::endl;
 
-    bool results[TEST_COUNT][2][RUN_COUNT];
+    std::vector<bool> results[speed_count][DEVICE_COUNT];
+    myshm *meshes[DEVICE_COUNT];
 
-    for (int i = 0; i < TEST_COUNT; ++i)
+    for (int speed = 0; speed < speed_count; ++speed)
     {
-        int delay = 100 * (TEST_COUNT-i);
+        int delay = 3 * speeds[speed];
         std::cout << "Running test at " << 1000.f / float(delay) << " bps" << std::endl;
-        myshm mesh1( delay, 10, 2, results[i][0], std::make_shared<libQ::log>(&logobj) );
-        myshm mesh2( delay, 10, 3, results[i][1], std::make_shared<libQ::log>(&logobj) );
-        
-        std::thread server1 (server_thread, &mesh1);
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(33));
-
-        std::thread server2 (server_thread, &mesh2);
-
-        while ( mesh1.doSend || mesh2.doSend )
+        for (int devid = 0; devid < DEVICE_COUNT; ++devid)
         {
-            if ( mesh1.recvCount == RUN_COUNT) mesh2.doSend = false;
-            if ( mesh2.recvCount == RUN_COUNT) mesh1.doSend = false;
+            meshes[devid] = new myshm( delay, 10, devid + 1, &results[speed][devid], std::make_shared<libQ::log>(&logobj) );
+            meshes[devid]->current_thread.reset( new std::thread(server_thread, meshes[devid]) );
+        }
 
+        while ( meshes[0]->recvCount != RUN_COUNT )
+        {
             std::this_thread::sleep_for(std::chrono::nanoseconds(500));
         }
 
-        mesh1.doLoop = false;
-        mesh2.doLoop = false;
+        for (int devid = 0; devid < DEVICE_COUNT; ++devid)
+            meshes[devid]->kill();
 
-        server1.join();
-        server2.join();
+        for (int devid = 0; devid < DEVICE_COUNT; ++devid)
+        {
+            meshes[devid]->waitForDeath();
+            delete meshes[devid];
+        }
     }
 
     std::cout << "\n\n\n\n\n\nRESULTS!!!" << std::endl;
-    for (int test = 0; test < TEST_COUNT; ++test)
+    for (int test = 0; test < speed_count; ++test)
     {
-        std::cout << "Test " << test << ": \n";
-        for (int run = 0; run < RUN_COUNT; ++run)
+        std::cout << "Speed " << speeds[test] << ": " << std::endl;
+
+        for (int devid = 0; devid < DEVICE_COUNT; ++devid)
         {
-            std::cout << results[test][0][run] << results[test][1][run] << ' ';
+            std::cout << " ID: " << devid + 1 << std::endl << "  ";
+            for (int run = 0; run < RUN_COUNT; ++run)
+            {
+                std::cout << results[test][0][run];
+            }
+            std::cout << std::endl;
         }
         std::cout << std::endl;
     }
