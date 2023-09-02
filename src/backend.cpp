@@ -20,7 +20,7 @@ mesh_backend::mesh_backend(int delayms, int buffsize, int ID)
 
     decrement_start_delay = true;
     waiting_for_start = false; // This exists only for cleanliness in the log
-    start_delay = 4200; // Should be around the size of a header but for shm would need to be technically max data length
+    start_delay = 42; // Should be around the size of a header but for shm would need to be technically max data length
 }
 
 mesh_backend::~mesh_backend()
@@ -70,8 +70,8 @@ void mesh_backend::wire_send()
 {
     auto log = _log->function("wire_send");
 
-    uint16_t recv_QueuePosition = 0;
-    int8_t QueueBit = 15;
+    uint8_t inQueuePosition = 0;
+    int8_t QueueBit = 7;
     uint32_t msglen = to_send.length();
 
 
@@ -89,12 +89,12 @@ void mesh_backend::wire_send()
         wire_send_bit( value );
         //log << value << std::flush;
         bool inbit = wire_recv_bit();
-        recv_QueuePosition = (recv_QueuePosition)|(inbit)<<QueueBit;
+        inQueuePosition = (inQueuePosition)|(inbit)<<QueueBit;
         wire_clear_bit();
         if ( inbit && !value )
         {
             log << " Bit conflict! - expected " << value << " but got " << inbit << " at QueueBit " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
-            wire_recv(QueueBit - 1, recv_QueuePosition);
+            wire_recv(QueueBit - 1, inQueuePosition);
             return;
         }
     }
@@ -132,6 +132,12 @@ void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
     wire_recv_byte( &((char*)(&recvlen))[0] );
 
     log << " Receiving " << std::bitset<24>(recvlen).to_string() << " bytes of data" << libQ::loglevel::NOTEDEBUG;
+
+    if ( recvlen > 4096 )
+    {
+        recv_callback("",0,inQueuePosition);
+        return;
+    }
 
     char buffer[recvlen];
     for (uint32_t i = 0; i < recvlen; ++i)

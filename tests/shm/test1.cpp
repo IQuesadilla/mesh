@@ -93,14 +93,14 @@ int main()
 
     for (int i = 0; i < TEST_COUNT; ++i)
     {
-        int delay = 3 * (TEST_COUNT-i);
+        int delay = 100 * (TEST_COUNT-i);
         std::cout << "Running test at " << 1000.f / float(delay) << " bps" << std::endl;
         myshm mesh1( delay, 10, 2, results[i][0], std::make_shared<libQ::log>(&logobj) );
         myshm mesh2( delay, 10, 3, results[i][1], std::make_shared<libQ::log>(&logobj) );
         
         std::thread server1 (server_thread, &mesh1);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
         std::thread server2 (server_thread, &mesh2);
 

@@ -26,7 +26,7 @@ public:
 protected:
     int _delayms, _buffsize;
     int _ID;
-    uint16_t _QueuePosition;
+    uint8_t _QueuePosition;
     uint16_t start_delay;
     bool decrement_start_delay, waiting_for_start;
 
@@ -34,7 +34,7 @@ protected:
     ~mesh_backend();
 
     void wire_send();
-    void wire_recv(int8_t QueueBit = 15, uint16_t inQueuePosition = 0);
+    void wire_recv(int8_t QueueBit = 7, uint16_t inQueuePosition = 0);
 
     virtual void wire_clear_bit() = 0;
     virtual void wire_send_bit( uint8_t bit ) = 0;
