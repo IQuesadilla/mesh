@@ -36,7 +36,11 @@ void mesh_backend::loop()
     if ( !to_send.empty() && !start_delay )
     {
         waiting_for_start = false;
-        wire_send();
+        if ( wire_send_header() )
+        {
+            wire_send_body( to_send.c_str(), to_send.length() );
+            to_send.erase();
+        }
     }
     else
     {
@@ -44,7 +48,7 @@ void mesh_backend::loop()
 
         if ( !waiting_for_start )
         {
-            log << " Waiting for start bit" << libQ::loglevel::NOTEDEBUG;
+            log << "Waiting for start bit" << libQ::loglevel::NOTEDEBUG;
             waiting_for_start = true;
         }
         
@@ -66,19 +70,41 @@ void mesh_backend::loop()
     }
 }
 
-void mesh_backend::wire_send()
+void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
 {
-    auto log = _log->function("wire_send");
+    auto log = _log->function("wire_recv");
+    log << "Attempting to receive some data, QueueBit = " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
 
-    uint8_t inQueuePosition = 0;
+    for ( ; QueueBit >= 0; --QueueBit )
+    {
+        _ct->new_cycle();
+        bool inbit = wire_recv_bit();
+        inQueuePosition = (inQueuePosition)|(inbit)<<QueueBit;
+    }
+
+    log << "Receiving data from Queue Position " << inQueuePosition << libQ::loglevel::NOTEDEBUG;
+
+    uint32_t recvlen = 0;
+    wire_recv_byte( &((char*)(&recvlen))[1] );
+    wire_recv_byte( &((char*)(&recvlen))[0] );
+
+    log << "Receiving " << std::bitset<16>(recvlen).to_string() << " bytes of data" << libQ::loglevel::NOTEDEBUG;
+
+    char buffer[recvlen];
+    for (uint32_t i = 0; i < recvlen; ++i)
+        wire_recv_byte( &buffer[i] );
+    recv_callback(buffer,recvlen,inQueuePosition); // Replace recv_QueuePosition with ID once adding new devices is implemented
+    ++_QueuePosition;
+}
+
+bool mesh_backend::wire_send_header(header_types type)
+{
+    auto log = _log->function("wire_send_header");
+
     int8_t QueueBit = 7;
-    uint32_t msglen = to_send.length();
-
-
-    wire_send_bit(255);
-
-    log << " Attempting to send the header" << libQ::loglevel::NOTEDEBUG;
+    uint8_t inQueuePosition = 0;
     
+    wire_send_bit(255);
     wire_recv_bit();
     wire_clear_bit();
 
@@ -93,57 +119,28 @@ void mesh_backend::wire_send()
         wire_clear_bit();
         if ( inbit && !value )
         {
-            log << " Bit conflict! - expected " << value << " but got " << inbit << " at QueueBit " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
+            log << "Bit conflict! - expected " << value << " but got " << inbit << " at QueueBit " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
             wire_recv(QueueBit - 1, inQueuePosition);
-            return;
+            return false;
         }
     }
 
-    wire_send_byte( ((char*)(&msglen))[2] );
+    return true;
+}
+
+void mesh_backend::wire_send_body(const char *raw, uint16_t msglen)
+{
+    auto log = _log->function("wire_send");
+
     wire_send_byte( ((char*)(&msglen))[1] );
     wire_send_byte( ((char*)(&msglen))[0] );
 
-    log << " Sending " << std::bitset<24>(msglen).to_string() << " bytes of data" << libQ::loglevel::NOTEDEBUG;
+    log << "Sending " << std::bitset<16>(msglen).to_string() << " bytes of data" << libQ::loglevel::NOTEDEBUG;
 
     for (uint32_t i = 0; i < msglen; ++i)
-        wire_send_byte(to_send[i]);
+        wire_send_byte(raw[i]);
 
-    to_send.erase(0,msglen);
     _QueuePosition = 1;
-}
-
-void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
-{
-    auto log = _log->function("wire_recv");
-    log << " Attempting to receive some data, QueueBit = " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
-
-    for ( ; QueueBit >= 0; --QueueBit )
-    {
-        _ct->new_cycle();
-        bool inbit = wire_recv_bit();
-        inQueuePosition = (inQueuePosition)|(inbit)<<QueueBit;
-    }
-
-    log << " Receiving data from Queue Position " << inQueuePosition << libQ::loglevel::NOTEDEBUG;
-
-    uint32_t recvlen = 0;
-    wire_recv_byte( &((char*)(&recvlen))[2] );
-    wire_recv_byte( &((char*)(&recvlen))[1] );
-    wire_recv_byte( &((char*)(&recvlen))[0] );
-
-    log << " Receiving " << std::bitset<24>(recvlen).to_string() << " bytes of data" << libQ::loglevel::NOTEDEBUG;
-
-    if ( recvlen > 4096 )
-    {
-        recv_callback("",0,inQueuePosition);
-        return;
-    }
-
-    char buffer[recvlen];
-    for (uint32_t i = 0; i < recvlen; ++i)
-        wire_recv_byte( &buffer[i] );
-    recv_callback(buffer,recvlen,inQueuePosition); // Replace recv_QueuePosition with ID once adding new devices is implemented
-    ++_QueuePosition;
 }
 
 void mesh_backend::wire_send_byte(char byte)

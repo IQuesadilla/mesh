@@ -7,7 +7,7 @@
 
 #define RUN_COUNT 3
 #define DEVICE_COUNT 4
-#define SPEEDS 100
+#define SPEEDS 1
 
 const std::string mbuff = "\
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, \
@@ -68,7 +68,7 @@ public:
         auto result = std::string(data,len);
         bool success = ( result == mbuff );
 
-        log << _ct->timestamp() << " From: " << devID << " Received: " << result << libQ::loglevel::VALUEDEBUG;
+        log << "From: " << devID << " Received: " << result << libQ::loglevel::VALUEDEBUG;
 
         _results->push_back(success);
         ++recvCount;

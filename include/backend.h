@@ -11,6 +11,14 @@
 class mesh_backend
 {
 public:
+    enum header_types
+    {
+        MESSAGE,
+        NEW_DEVICE,
+        PING,
+        EMERGENCY
+    };
+
     virtual ~mesh_backend();
 
     void loop();
@@ -34,8 +42,10 @@ protected:
 
     mesh_backend(int delayms, int buffsize, int ID);
 
-    void wire_send();
     void wire_recv(int8_t QueueBit = 7, uint16_t inQueuePosition = 0);
+
+    bool wire_send_header(header_types type = MESSAGE);
+    void wire_send_body(const char *raw, uint16_t msglen);
 
     virtual void wire_clear_bit() = 0;
     virtual void wire_send_bit( uint8_t bit ) = 0;
