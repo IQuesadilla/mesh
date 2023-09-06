@@ -8,10 +8,9 @@
 #include <iostream>
 
 #define DELAYMS 50
-#define BUFFSIZE 10
 #define SHMKEY 0x1234
 
-shm_backend::shm_backend() : mesh_backend(DELAYMS,BUFFSIZE,200)
+shm_backend::shm_backend(int ID, int buffsize) : mesh_backend(DELAYMS,buffsize,ID)
 {
     init_shm(SHMKEY);
 }

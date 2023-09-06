@@ -1,4 +1,4 @@
-#include "backends/shm.h"
+#include "frontends/benchmark.h"
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -19,74 +19,12 @@ eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat \
 non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\
 ";
 
-class myshm : public shm_backend
+benchmark::benchmark()
 {
-public:
-    myshm( int delayms, int buffsize, int ID, std::vector<bool> *results, std::shared_ptr<libQ::log> log ) : shm_backend( delayms, buffsize, ID )
-    {
-        cPos = 0;
-        mLen = mbuff.length();
-        _results = results;
+    ;
+}
 
-        _log = log;
-        _log->setPrefix(std::string(std::string("ID: ") + std::to_string(ID)).c_str());
-
-        recvCount = 0;
-        doLoop = true;
-        doSend = true;
-    }
-
-    ~myshm()
-    {
-        auto log = _log->function("~myshm");
-        //delete current_thread.get();
-    }
-
-    void kill()
-    {
-        doLoop = false;
-    }
-
-    void waitForDeath()
-    {
-        current_thread->join();
-    }
-
-    uint32_t send_callback( char *data, uint32_t len )
-    {
-        int count = ( len + cPos > mLen) ? mLen - cPos : len;
-
-        memcpy ( data, &mbuff.c_str()[cPos], count );
-        cPos += count;
-
-        return count;
-    }
-
-    void recv_callback( char *data, uint32_t len, uint64_t devID )
-    {
-        auto log = _log->function("recv_callback");
-        auto result = std::string(data,len);
-        bool success = ( result == mbuff );
-
-        log << "From: " << devID << " Received: " << result << libQ::loglevel::VALUEDEBUG;
-
-        _results->push_back(success);
-        ++recvCount;
-        return;
-    }
-
-    std::shared_ptr<std::thread> current_thread;
-
-    unsigned int cPos;
-    unsigned int mLen;
-    std::vector<bool> *_results;
-
-    int recvCount;
-    bool doLoop;
-    bool doSend;
-};
-
-void server_thread(myshm *mesh)
+void server_thread()
 {
     auto log = mesh->_log->function("server_thread");
     while( mesh->doLoop )
@@ -102,9 +40,8 @@ void server_thread(myshm *mesh)
     }
 }
 
-int main()
+int IAMACLASSFUNCTION()
 {
-    libQ::log logobj(libQ::vlevel::DEBUG);
     int speeds[] = {SPEEDS};
     int speed_count = sizeof(speeds)/sizeof(*speeds);
 

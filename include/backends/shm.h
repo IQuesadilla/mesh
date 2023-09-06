@@ -7,7 +7,7 @@
 class shm_backend : public mesh_backend
 {
 public:
-    shm_backend();
+    shm_backend( int ID, int buffsize );
     shm_backend( int delayms, int buffsize, int ID );
 
 private:
