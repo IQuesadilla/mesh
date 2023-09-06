@@ -16,16 +16,20 @@ SOFLAGS = -o $@ $^ -shared
 ARFLAGS = # Needs to be filled in
 
 TBIN = tests/bin/
-BINFLAGS = -o $@ $^ $(CFLAGS) -lQ -lmesh
+BINFLAGS = -o $@ $^ $(CFLAGS) -L$(LIBDIR) $(CLIBS)
+
+LIBS = mesh Q
+MAKELIBS = $(foreach lib, $(LIBS), $(LIBDIR)/lib$(lib).so)
+CLIBS = $(foreach lib, $(LIBS), -l$(lib))
 
 #NETMESHTESTS = $(TBIN)/netmesh_testthreaded $(TBIN)/netmesh_testinterrupt $(TBIN)/netmesh_test_getdevices
 #MESHFSTESTS = $(TBIN)/meshfs_test1 $(TBIN)/meshfs_test2
 
 BACKEND = src/backend.cpp include/backend.h
-BACKEND_OBJECTS = $(OBJDIR)/backend.o $(foreach backend, $(BACKENDS_ENABLED), $(ODIR)/backend_$(backend).o)
+BACKEND_OBJECTS = $(ODIR)/backend.o $(foreach backend, $(BACKENDS_ENABLED), $(ODIR)/backend_$(backend).o)
 
 FRONTEND = src/frontend.cpp include/frontend.h
-FRONTEND_OBJECTS = $(OBJDIR)/frontend.o $(foreach frontend, $(FRONTENDS_ENABLED), $(ODIR)/frontend_$(frontend).o)
+FRONTEND_OBJECTS = $(ODIR)/frontend.o $(foreach frontend, $(FRONTENDS_ENABLED), $(ODIR)/frontend_$(frontend).o)
 
 .PHONY: all tests frontends
 all: frontends
@@ -34,9 +38,9 @@ frontends: $(foreach frontend, $(FRONTENDS_ENABLED), bin/$(frontend))
 
 
 #------Installing libQ------
-lib/libQ.so: libQ/Makefile
+$(LIBDIR)/libQ.so: libQ/Makefile
 	$(MAKE) -C libQ/
-	cp libQ/libQ.so lib/
+	cp libQ/libQ.so $(LIBDIR)
 
 libQ/Makefile:
 	git submodule init
@@ -45,7 +49,7 @@ libQ/Makefile:
 
 
 #------Frontends------
-bin/benchmark: src/main.cpp $(ODIR)/frontend_benchmark.o $(LIBDIR)/libmesh.so
+bin/benchmark: src/main.cpp $(ODIR)/frontend_benchmark.o $(MAKELIBS)
 	$(CXX) $(BINFLAGS) -lpthread
 
 #------Tests------
