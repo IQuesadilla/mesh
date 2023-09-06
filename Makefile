@@ -32,6 +32,18 @@ all: frontends
 tests: 
 frontends: $(foreach frontend, $(FRONTENDS_ENABLED), bin/$(frontend))
 
+
+#------Installing libQ------
+lib/libQ.so: libQ/Makefile
+	$(MAKE) -C libQ/
+	cp libQ/libQ.so lib/
+
+libQ/Makefile:
+	git submodule init
+	git submodule sync
+	git submodule update
+
+
 #------Frontends------
 bin/benchmark: src/main.cpp $(ODIR)/frontend_benchmark.o $(LIBDIR)/libmesh.so
 	$(CXX) $(BINFLAGS) -lpthread
