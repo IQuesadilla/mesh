@@ -6,6 +6,8 @@ CXX = g++
 AR = ar
 CFLAGS = -std=c++17 -Wall -fPIC -fno-exceptions -O3 -Iinclude/ -IlibQ/include/
 
+MAKEFLAGS = libQ/Makefile
+
 # Setup -L and -Wl,-rpath to search for files in /usr/local/lib/, ../lib/, and possibly ./lib/
 
 ODIR = obj/
@@ -25,10 +27,10 @@ CLIBS = $(foreach lib, $(LIBS), -l$(lib))
 #NETMESHTESTS = $(TBIN)/netmesh_testthreaded $(TBIN)/netmesh_testinterrupt $(TBIN)/netmesh_test_getdevices
 #MESHFSTESTS = $(TBIN)/meshfs_test1 $(TBIN)/meshfs_test2
 
-BACKEND = src/backend.cpp include/backend.h
+BACKEND = src/backend.cpp include/backend.h $(MAKEFLAGS)
 BACKEND_OBJECTS = $(ODIR)/backend.o $(foreach backend, $(BACKENDS_ENABLED), $(ODIR)/backend_$(backend).o)
 
-FRONTEND = src/frontend.cpp include/frontend.h
+FRONTEND = src/frontend.cpp include/frontend.h $(MAKEFLAGS)
 FRONTEND_OBJECTS = $(ODIR)/frontend.o $(foreach frontend, $(FRONTENDS_ENABLED), $(ODIR)/frontend_$(frontend).o)
 
 .PHONY: all tests frontends
@@ -95,7 +97,7 @@ $(LIBDIR)/libmesh.a: $(BACKEND_OBJECTS)
 
 
 #------Frontend Objects------
-$(ODIR)/frontend_benchmark.o: src/frontends/benchmark.cpp include/frontends/benchmark.h
+$(ODIR)/frontend_benchmark.o: src/frontends/benchmark.cpp include/frontends/benchmark.h $(FRONTEND)
 	$(CXX) $(OBJFLAGS)
 
 $(ODIR)/frontend.o: $(FRONTEND)
