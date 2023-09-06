@@ -1,4 +1,4 @@
 
 [submodule "libQ"]
 	path = libQ
-	url = git@github.com:IQuesadilla/libQ.git
+	url = https://github.com/IQuesadilla/libQ.git
