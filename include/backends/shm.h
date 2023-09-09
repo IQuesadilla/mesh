@@ -7,8 +7,8 @@
 class shm_backend : public mesh_backend
 {
 public:
-    shm_backend( int ID, int buffsize );
-    shm_backend( int delayms, int buffsize, int ID );
+    shm_backend( int ID, int buffsize, std::shared_ptr<libQ::log> _log );
+    shm_backend( int delayms, int buffsize, int ID, std::shared_ptr<libQ::log> _log );
 
 private:
     uint8_t *shmptr;

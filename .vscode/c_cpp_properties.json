@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/",
-                "${workspaceFolder}/libQ/include/"
+                "${workspaceFolder}/libQ/include/",
+                "${workspaceFolder}/libQ/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

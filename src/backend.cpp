@@ -10,10 +10,12 @@
 #include <bitset>
 #include <iostream>
 
-mesh_backend::mesh_backend(int delayms, int buffsize, int ID)
+mesh_backend::mesh_backend(int delayms, int buffsize, int ID, std::shared_ptr<libQ::log> _log)
 {
     _delayms = delayms;
     _buffsize = buffsize;
+
+    logobj = _log;
 
     _ID = ID;
     _QueuePosition = ID;
@@ -25,12 +27,12 @@ mesh_backend::mesh_backend(int delayms, int buffsize, int ID)
 
 mesh_backend::~mesh_backend()
 {
-    auto log = _log->function("~mesh_backend");
+    auto log = logobj->function("~mesh_backend");
 }
 
-void mesh_backend::loop()
+void mesh_backend::run_cycle()
 {
-    auto log = _log->function("loop",waiting_for_start);
+    auto log = logobj->function("loop",waiting_for_start);
 
     _ct->new_cycle();
     if ( !to_send.empty() && !start_delay )
@@ -72,7 +74,7 @@ void mesh_backend::loop()
 
 void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
 {
-    auto log = _log->function("wire_recv");
+    auto log = logobj->function("wire_recv");
     log << "Attempting to receive some data, QueueBit = " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
 
     for ( ; QueueBit >= 0; --QueueBit )
@@ -99,7 +101,7 @@ void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
 
 bool mesh_backend::wire_send_header(header_types type)
 {
-    auto log = _log->function("wire_send_header");
+    auto log = logobj->function("wire_send_header");
 
     int8_t QueueBit = 7;
     uint8_t inQueuePosition = 0;
@@ -130,7 +132,7 @@ bool mesh_backend::wire_send_header(header_types type)
 
 void mesh_backend::wire_send_body(const char *raw, uint16_t msglen)
 {
-    auto log = _log->function("wire_send");
+    auto log = logobj->function("wire_send");
 
     wire_send_byte( ((char*)(&msglen))[1] );
     wire_send_byte( ((char*)(&msglen))[0] );

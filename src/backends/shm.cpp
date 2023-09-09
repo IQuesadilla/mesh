@@ -10,12 +10,12 @@
 #define DELAYMS 50
 #define SHMKEY 0x1234
 
-shm_backend::shm_backend(int ID, int buffsize) : mesh_backend(DELAYMS,buffsize,ID)
+shm_backend::shm_backend(int ID, int buffsize, std::shared_ptr<libQ::log> _log) : mesh_backend(DELAYMS,buffsize,ID,_log)
 {
     init_shm(SHMKEY);
 }
 
-shm_backend::shm_backend(int delayms, int buffsize, int ID) : mesh_backend(delayms,buffsize,ID)
+shm_backend::shm_backend(int delayms, int buffsize, int ID, std::shared_ptr<libQ::log> _log) : mesh_backend(delayms,buffsize,ID,_log)
 {
     init_shm(SHMKEY);
 }
