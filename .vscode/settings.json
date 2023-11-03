@@ -80,9 +80,10 @@
     "cmake.configureOnOpen": false,
     "makefile.launchConfigurations": [
         {
-            "cwd": "/home/iquezada/Code/c++/mesh/tests/bin",
-            "binaryPath": "/home/iquezada/Code/c++/mesh/tests/bin/netmesh_testinterrupt",
+            "cwd": "/home/iquezada/Code/c++/mesh/",
+            "binaryPath": "/home/iquezada/Code/c++/mesh/",
             "binaryArgs": []
         }
-    ]
+    ],
+    "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

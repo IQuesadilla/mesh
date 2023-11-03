@@ -1,13 +1,20 @@
 #include "frontend.h"
 
-frontend::frontend()
+frontend::frontend(cfifo *wfifoptr, cfifo *rfifoptr)
 {
-    _backends.reset(new std::vector<mesh_backend*>);
-    backend_timer.reset(new libQ::event_timer<mesh_backend*>(_backends));
+    _write_fifo = wfifoptr;
+    _read_fifo = rfifoptr;
+
+    FrontendInit();
 }
 
-void frontend::run_cycle()
+
+cfifo* frontend::GetReadFifo()
 {
-    update();
-    backend_timer->update_children();
+    return _read_fifo;
+}
+
+cfifo* frontend::GetWriteFifo()
+{
+    return _write_fifo;
 }

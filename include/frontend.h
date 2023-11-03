@@ -1,37 +1,24 @@
-#ifndef FRONTEND_H
-#define FRONTEND_H
-#pragma once
+#ifndef MESH_FRONTEND
+#define MESH_FRONTEND
 
-#include "log.h"
-#include "event_timer.h"
-
-#include "backend.h"
-
-#include <memory>
-#include <vector>
+#include "../libQ/include/libQ.h"
+#include "../libQ/include/cfifo.h"
 
 class frontend
 {
 public:
-    frontend();
+    frontend(cfifo *wfifoptr, cfifo *rfifoptr);
 
-    bool doLoop();
+    cfifo* GetReadFifo();
+    cfifo* GetWriteFifo();
 
-    virtual uint32_t get_send_data( char *data, uint32_t len ) = 0;
-    virtual void put_recv_data( char *data, uint32_t len, uint64_t devID ) = 0;
+private:
+    // Specific Functions
+    void FrontendInit();
 
-    void send(int msgID);
-
-    void run_cycle();
-
-protected:
-    virtual void update() = 0;
-
-    std::shared_ptr<libQ::log> logobj;
-    std::shared_ptr<libQ::event_timer<mesh_backend*> > backend_timer;
-
-    std::shared_ptr<std::vector<mesh_backend*> > _backends;
-
+    cfifo *_write_fifo;
+    cfifo *_read_fifo;
+    void *_usrptr;
 };
 
 #endif

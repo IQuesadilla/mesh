@@ -1,62 +1,71 @@
-#include "backends/shm.h"
+#include "backend.h"
+
+#include "cycle_timer.h"
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <errno.h>
 #include <fstream>
+#include <memory>
 
 #include <iostream>
 
 #define DELAYMS 50
 #define SHMKEY 0x1234
 
-shm_backend::shm_backend(int ID, int buffsize, std::shared_ptr<libQ::log> _log) : mesh_backend(DELAYMS,buffsize,ID,_log)
+struct backend_ptr
 {
-    init_shm(SHMKEY);
-}
+    std::shared_ptr<libQ::cycle_timer> _ct;
+    uint8_t *shmptr;
+};
 
-shm_backend::shm_backend(int delayms, int buffsize, int ID, std::shared_ptr<libQ::log> _log) : mesh_backend(delayms,buffsize,ID,_log)
-{
-    init_shm(SHMKEY);
-}
+#define myshm ((backend_ptr*)_usrptr)
 
-void shm_backend::init_shm( key_t key )
+void backend::BackendInit()
 {
     int sid;
-
     sid = shmget( SHMKEY, 1024, 0644|IPC_CREAT );
 
-    //stdout_mutex->lock();
-    //std::cout << "errno: " << errno << std::endl;
-    //stdout_mutex->unlock();
-    //errno = 0;
+    _usrptr = new backend_ptr;
 
-    shmptr = (uint8_t*)shmat( sid, NULL, 0 );
-    *shmptr = 0;
+    HeaderCycleCount = 2; // Replace
+    BodyCycleCount = 24;
 
-    _ct.reset(new libQ::cycle_timer(_delayms));
+    myshm->shmptr = (uint8_t*)shmat( sid, NULL, 0 );
+    *myshm->shmptr = 0;
+
+    myshm->_ct.reset(new libQ::cycle_timer(DELAYMS));
 }
 
-void shm_backend::wire_clear_bit()
+void backend::WriteBodyByte()
 {
-    _ct->delay_until(2,3);
-    *shmptr = 0;
-    return;
+    switch ( CurrentCycle % 3 )
+    {
+    case 2: // Perform the write on the first part of the cycle
+        if ( (BodyByteBuffer>>(CurrentCycle>>1)) & 0b1 )
+        {
+            (*myshm->shmptr) = 1;
+        }
+        break;
+    case 1: // This is for reading, do nothing
+        break;
+    case 0: // Clear the memory buffer to prepare for the next write
+        (*myshm->shmptr) = 0;
+        break;
+    }
 }
 
-void shm_backend::wire_send_bit(uint8_t bit)
+void backend::ReadBodyByte() // Incomplete
 {
-    // Wait for nothing, should run new_cycle first
-
-    if (bit)
-        (*shmptr) = bit;
-
-    return;
-}
-
-uint8_t shm_backend::wire_recv_bit()
-{
-    _ct->delay_until(1,3); // Wait for 1/3 of interval
-
-    return (*shmptr);
+   switch ( CurrentCycle % 3 )
+    {
+    case 2: // This is for writing, do nothing
+        break;
+    case 1: // Perform the write on the middle part of the cycle
+        // Perform a read and set some bits accordingly
+        break;
+    case 0: // Clear the memory buffer to prepare for the next write
+        (*myshm->shmptr) = 0;
+        break;
+    }
 }

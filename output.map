@@ -1,0 +1,286 @@
+Archive member included to satisfy reference by file (symbol)
+
+/usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+                              /tmp/ccUUEuNX.o (__udivmodhi4)
+/usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+                              /tmp/ccUUEuNX.o (__tablejump2__)
+
+Discarded input sections
+
+ .group         0x0000000000000000        0x8 /tmp/cctPYy6s.o
+ .group         0x0000000000000000        0x8 /tmp/cctPYy6s.o
+ .group         0x0000000000000000        0x8 /tmp/cctPYy6s.o
+ .group         0x0000000000000000        0x8 /tmp/cctPYy6s.o
+ .group         0x0000000000000000        0x8 /tmp/cctPYy6s.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x0000000000000000 0x00000000000077ff xr
+BOOT             0x0000000000007800 0x0000000000000800 xr
+RAM              0x0000000000800100 0x0000000000000800 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+Address of section .data set to 0x800100
+
+.text           0x0000000000000000      0xe2a
+                [!provide]                        PROVIDE (__text_start, .)
+ *(.text)
+ .text          0x0000000000000000        0x0 /tmp/ccdydbaR.o
+ .text          0x0000000000000000        0x0 /tmp/ccUUEuNX.o
+ .text          0x0000000000000000        0x0 /tmp/ccnfYZTh.o
+ .text          0x0000000000000000        0x0 /tmp/ccbotmev.o
+ .text          0x0000000000000000        0x0 /tmp/cctPYy6s.o
+ .text          0x0000000000000000        0x0 /tmp/cceGctKP.o
+ .text          0x0000000000000000        0x0 /tmp/ccvIgWSh.o
+ .text          0x0000000000000000       0x66 /tmp/cctNJvnL.o
+ .text          0x0000000000000066        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text          0x0000000000000066        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ *(.text*)
+ .text._Z5startv
+                0x0000000000000066       0x92 /tmp/ccdydbaR.o
+                0x0000000000000066                _Z5startv
+ .text._ZN7backendC2EP5cfifoS1_
+                0x00000000000000f8       0x20 /tmp/ccUUEuNX.o
+                0x00000000000000f8                _ZN7backendC2EP5cfifoS1_
+                0x00000000000000f8                _ZN7backendC1EP5cfifoS1_
+ .text._ZN7backend9ClockTickEv
+                0x0000000000000118      0x390 /tmp/ccUUEuNX.o
+                0x0000000000000118                _ZN7backend9ClockTickEv
+ .text._ZN7backend12QueueMessageEv
+                0x00000000000004a8       0x14 /tmp/ccUUEuNX.o
+                0x00000000000004a8                _ZN7backend12QueueMessageEv
+ .text._ZN7backend11GetReadFifoEv
+                0x00000000000004bc        0xc /tmp/ccUUEuNX.o
+                0x00000000000004bc                _ZN7backend11GetReadFifoEv
+ .text._ZN7backend12GetWriteFifoEv
+                0x00000000000004c8        0xc /tmp/ccUUEuNX.o
+                0x00000000000004c8                _ZN7backend12GetWriteFifoEv
+ .text._ZN7backend11BackendInitEv
+                0x00000000000004d4       0x8e /tmp/ccnfYZTh.o
+                0x00000000000004d4                _ZN7backend11BackendInitEv
+ .text._ZN7backend13WriteStartBitEv
+                0x0000000000000562        0x2 /tmp/ccnfYZTh.o
+                0x0000000000000562                _ZN7backend13WriteStartBitEv
+ .text._ZN7backend14WriteHeaderBitEv
+                0x0000000000000564       0x56 /tmp/ccnfYZTh.o
+                0x0000000000000564                _ZN7backend14WriteHeaderBitEv
+ .text._ZN7backend13ReadHeaderBitEv
+                0x00000000000005ba       0x8c /tmp/ccnfYZTh.o
+                0x00000000000005ba                _ZN7backend13ReadHeaderBitEv
+ .text._ZN7backend13WriteBodyByteEv
+                0x0000000000000646       0x56 /tmp/ccnfYZTh.o
+                0x0000000000000646                _ZN7backend13WriteBodyByteEv
+ .text._ZN7backend12ReadBodyByteEv
+                0x000000000000069c       0x30 /tmp/ccnfYZTh.o
+                0x000000000000069c                _ZN7backend12ReadBodyByteEv
+ .text._ZN7backend11ClearOutputEv
+                0x00000000000006cc        0xc /tmp/ccnfYZTh.o
+                0x00000000000006cc                _ZN7backend11ClearOutputEv
+ .text.rising_interrupt
+                0x00000000000006d8       0x50 /tmp/ccnfYZTh.o
+                0x00000000000006d8                rising_interrupt
+ .text.timer_interrupt
+                0x0000000000000728       0x14 /tmp/ccnfYZTh.o
+                0x0000000000000728                timer_interrupt
+ .text._Z11BackendPingv
+                0x000000000000073c        0xc /tmp/ccnfYZTh.o
+                0x000000000000073c                _Z11BackendPingv
+ .text._ZN8frontendC2EP5cfifoS1_
+                0x0000000000000748        0xe /tmp/ccbotmev.o
+                0x0000000000000748                _ZN8frontendC1EP5cfifoS1_
+                0x0000000000000748                _ZN8frontendC2EP5cfifoS1_
+ .text._ZN8frontend11GetReadFifoEv
+                0x0000000000000756        0x8 /tmp/ccbotmev.o
+                0x0000000000000756                _ZN8frontend11GetReadFifoEv
+ .text._ZN8frontend12GetWriteFifoEv
+                0x000000000000075e        0x8 /tmp/ccbotmev.o
+                0x000000000000075e                _ZN8frontend12GetWriteFifoEv
+ .text._Z7putcharc
+                0x0000000000000766       0x1c /tmp/cctPYy6s.o
+                0x0000000000000766                _Z7putcharc
+ .text._ZN5shell5writeEPKc.isra.2
+                0x0000000000000782       0x18 /tmp/cctPYy6s.o
+ .text._ZN5shell3clsEv.isra.3
+                0x000000000000079a       0x68 /tmp/cctPYy6s.o
+ .text._Z7getcharv
+                0x0000000000000802       0x16 /tmp/cctPYy6s.o
+                0x0000000000000802                _Z7getcharv
+ .text._ZN5shell13update_headerEv
+                0x0000000000000818      0x1ea /tmp/cctPYy6s.o
+                0x0000000000000818                _ZN5shell13update_headerEv
+ .text._ZN5shell13print_messageEv
+                0x0000000000000a02       0xe6 /tmp/cctPYy6s.o
+                0x0000000000000a02                _ZN5shell13print_messageEv
+ .text._ZN5shell5parseEv
+                0x0000000000000ae8      0x152 /tmp/cctPYy6s.o
+                0x0000000000000ae8                _ZN5shell5parseEv
+ .text._ZN8frontend12FrontendInitEv
+                0x0000000000000c3a       0x84 /tmp/cctPYy6s.o
+                0x0000000000000c3a                _ZN8frontend12FrontendInitEv
+ .text.usart_rx_interrupt
+                0x0000000000000cbe       0x4c /tmp/cctPYy6s.o
+                0x0000000000000cbe                usart_rx_interrupt
+ .text._Z12FrontendPingv
+                0x0000000000000d0a        0x8 /tmp/cctPYy6s.o
+                0x0000000000000d0a                _Z12FrontendPingv
+ .text._ZN5cfifoC2EPcj
+                0x0000000000000d12       0x16 /tmp/cceGctKP.o
+                0x0000000000000d12                _ZN5cfifoC1EPcj
+                0x0000000000000d12                _ZN5cfifoC2EPcj
+ .text._ZN5cfifo5writeEPKcj
+                0x0000000000000d28        0x6 /tmp/cceGctKP.o
+                0x0000000000000d28                _ZN5cfifo5writeEPKcj
+ .text._ZN5cfifo4readEPcj
+                0x0000000000000d2e        0x6 /tmp/cceGctKP.o
+                0x0000000000000d2e                _ZN5cfifo4readEPcj
+ .text._ZN5cfifo5putchEc
+                0x0000000000000d34       0x4a /tmp/cceGctKP.o
+                0x0000000000000d34                _ZN5cfifo5putchEc
+ .text._ZN5cfifo5getchEPc
+                0x0000000000000d7e       0x48 /tmp/cceGctKP.o
+                0x0000000000000d7e                _ZN5cfifo5getchEPc
+ .text._ZN5cfifo3popEv
+                0x0000000000000dc6       0x30 /tmp/cceGctKP.o
+                0x0000000000000dc6                _ZN5cfifo3popEv
+ .text.libgcc.mul
+                0x0000000000000df6        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.div
+                0x0000000000000df6       0x28 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+                0x0000000000000df6                __udivmodhi4
+ .text.libgcc   0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.prologue
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.builtins
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fmul
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.fixed
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .text.libgcc.mul
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ .text.libgcc.div
+                0x0000000000000e1e        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ .text.libgcc   0x0000000000000e1e        0xc /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+                0x0000000000000e1e                __tablejump2__
+ .text.libgcc.prologue
+                0x0000000000000e2a        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ .text.libgcc.builtins
+                0x0000000000000e2a        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ .text.libgcc.fmul
+                0x0000000000000e2a        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ .text.libgcc.fixed
+                0x0000000000000e2a        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+                0x0000000000000e2a                PROVIDE (__text_end, .)
+                0x0000000000000e2a                __etext = __text_end
+
+.trampolines    0x0000000000000e2a        0x0
+ .trampolines   0x0000000000000e2a        0x0 linker stubs
+
+.data           0x0000000000800100       0x81 load address 0x0000000000000e2a
+                0x0000000000800100                PROVIDE (__data_start, .)
+ *(.data)
+ .data          0x0000000000800100        0x0 /tmp/ccdydbaR.o
+ .data          0x0000000000800100        0x0 /tmp/ccUUEuNX.o
+ .data          0x0000000000800100        0x0 /tmp/ccnfYZTh.o
+ .data          0x0000000000800100        0x0 /tmp/ccbotmev.o
+ .data          0x0000000000800100        0x0 /tmp/cctPYy6s.o
+ .data          0x0000000000800100        0x0 /tmp/cceGctKP.o
+ .data          0x0000000000800100        0x0 /tmp/ccvIgWSh.o
+ .data          0x0000000000800100        0x0 /tmp/cctNJvnL.o
+ .data          0x0000000000800100        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .data          0x0000000000800100        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ *(.data*)
+ .data._ZZN5shell13update_headerEvE9spbufflen
+                0x0000000000800100        0x2 /tmp/cctPYy6s.o
+                0x0000000000800100                _ZZN5shell13update_headerEvE9spbufflen
+ .data._ZZN5shell13update_headerEvE10numbufflen
+                0x0000000000800102        0x2 /tmp/cctPYy6s.o
+                0x0000000000800102                _ZZN5shell13update_headerEvE10numbufflen
+ *(.rodata)
+ *(.rodata*)
+ .rodata.str1.1
+                0x0000000000800104       0x7d /tmp/cctPYy6s.o
+                0x0000000000800181                _edata = .
+                0x0000000000800181                PROVIDE (__data_end, .)
+                0x0000000000000e2a                __data_load_start = LOADADDR (.data)
+                0x0000000000000eab                __data_load_end = (__data_load_start + (__data_end - __data_start))
+
+.bss            0x0000000000800184        0xc load address 0x0000000000000eac
+                0x0000000000800184                PROVIDE (__bss_start, .)
+ *(.bss)
+ .bss           0x0000000000800184        0x0 /tmp/ccdydbaR.o
+ .bss           0x0000000000800184        0x0 /tmp/ccUUEuNX.o
+ .bss           0x0000000000800184        0x0 /tmp/ccnfYZTh.o
+ .bss           0x0000000000800184        0x0 /tmp/ccbotmev.o
+ .bss           0x0000000000800184        0x0 /tmp/cctPYy6s.o
+ .bss           0x0000000000800184        0x0 /tmp/cceGctKP.o
+ .bss           0x0000000000800184        0x0 /tmp/ccvIgWSh.o
+ .bss           0x0000000000800184        0x0 /tmp/cctNJvnL.o
+ .bss           0x0000000000800184        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_udivmodhi4.o)
+ .bss           0x0000000000800184        0x0 /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a(_tablejump2.o)
+ *(.bss*)
+ .bss._this_backend
+                0x0000000000800184        0x2 /tmp/ccnfYZTh.o
+                0x0000000000800184                _this_backend
+ .bss.mysh      0x0000000000800186        0x6 /tmp/cctPYy6s.o
+                0x0000000000800186                mysh
+ .bss._this_frontend
+                0x000000000080018c        0x2 /tmp/cctPYy6s.o
+                0x000000000080018c                _this_frontend
+ *(COMMON)
+                0x0000000000800190                . = ALIGN (0x4)
+ *fill*         0x000000000080018e        0x2 
+                0x0000000000800190                PROVIDE (__bss_end, .)
+                0x0000000000800190                PROVIDE (__stack_end, .)
+
+.bootsec        0x0000000000007800       0x40
+                0x0000000000007800                __boot_start = .
+ *(.init4)
+ *(.bootsec.__boot)
+ .bootsec.__boot
+                0x0000000000007800        0x4 /tmp/cctNJvnL.o
+ *(.bootsec*)
+ .bootsection   0x0000000000007804       0x3c /tmp/ccvIgWSh.o
+                0x0000000000007804                __do_clear_bss
+                0x0000000000007818                __do_copy_data
+                0x0000000000007834                boot
+                0x0000000000007840                __boot_end = .
+LOAD /tmp/ccdydbaR.o
+LOAD /tmp/ccUUEuNX.o
+LOAD /tmp/ccnfYZTh.o
+LOAD /tmp/ccbotmev.o
+LOAD /tmp/cctPYy6s.o
+LOAD /tmp/cceGctKP.o
+LOAD /tmp/ccvIgWSh.o
+LOAD /tmp/cctNJvnL.o
+LOAD /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a
+LOAD /usr/lib/gcc/avr/5.4.0/../../../avr/lib/avr5/libm.a
+START GROUP
+LOAD /usr/lib/gcc/avr/5.4.0/avr5/libgcc.a
+LOAD /usr/lib/gcc/avr/5.4.0/../../../avr/lib/avr5/libm.a
+LOAD /usr/lib/gcc/avr/5.4.0/../../../avr/lib/avr5/libc.a
+LOAD /usr/lib/gcc/avr/5.4.0/../../../avr/lib/avr5/libatmega328p.a
+END GROUP
+OUTPUT(bin/main.elf elf32-avr)
+LOAD linker stubs
+
+.progmem.gcc_sw_table._ZN7backend9ClockTickEv
+                0x0000000000007840       0x12
+ .progmem.gcc_sw_table._ZN7backend9ClockTickEv
+                0x0000000000007840       0x12 /tmp/ccUUEuNX.o
+
+.comment        0x0000000000000000       0x11
+ .comment       0x0000000000000000       0x11 /tmp/ccdydbaR.o
+                                         0x12 (size before relaxing)
+ .comment       0x0000000000000011       0x12 /tmp/ccUUEuNX.o
+ .comment       0x0000000000000011       0x12 /tmp/ccnfYZTh.o
+ .comment       0x0000000000000011       0x12 /tmp/ccbotmev.o
+ .comment       0x0000000000000011       0x12 /tmp/cctPYy6s.o
+ .comment       0x0000000000000011       0x12 /tmp/cceGctKP.o
+ .comment       0x0000000000000011       0x12 /tmp/ccvIgWSh.o
+
+.avr.prop       0x0000000000000000       0x81
+ .avr.prop      0x0000000000000000       0x81 /tmp/cctNJvnL.o

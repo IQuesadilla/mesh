@@ -1,0 +1,21 @@
+AVR_CC=avr-g++
+AVR_CFLAGS=-fno-exceptions -ffunction-sections -fdata-sections -Werror -nostartfiles -Wno-misspelled-isr -Os
+AVR_LDSCRIPT=-Wl,-T,temp.ld -Wl,-Map,output.map
+AVR_LIBQ=-I./libQ/include -I./include
+
+.PHONY: all
+all: bin/main.hex
+
+bin/main.elf: src/main.cpp src/backend.cpp include/backend.h src/backends/bitbang.cpp src/frontend.cpp include/frontend.h src/frontends/uart.cpp libQ/src/avr/bootloader.c temp.S temp.ld libQ/include/avr/m328p_defines.h libQ/include/avr/generic.h libQ/include/cfifo.h libQ/src/cfifo.cpp
+	$(CC) $(CFLAGS) $(LDSCRIPT) $(LIBQ) -mmcu=atmega328p -o $@ src/main.cpp src/backend.cpp src/backends/bitbang.cpp src/frontend.cpp src/frontends/uart.cpp libQ/src/cfifo.cpp libQ/src/avr/bootloader.c temp.S
+
+bin/main.hex: bin/main.elf
+	avr-objcopy -O ihex bin/main.elf $@
+
+.PHONY: avrdump
+avrdump: bin/main.elf
+	{ avr-objdump -m avr5 -z -D bin/main.elf; nm -n bin/main.elf; } | less
+
+.PHONY: avrinstall
+avrinstall: bin/main.hex
+	avrdude -cft232h -patmega328p -P/dev/ttyUSB0 -P ft0 -Uflash:w:bin/main.hex

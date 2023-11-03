@@ -1,7 +1,9 @@
-// This file is intended to have a main and simply bridge a frontend to a backend
-// This file should get renamed as bridge already means something
-// As defines, this file should accept one frontend and any number of backends
-// The frontend does not need to know which backends are being used
+#include "frontend.h"
+#include "backend.h"
+
+#include "libQ.h"
+
+#ifndef __AVR__
 
 #include <cstring>
 #include <string>
@@ -10,17 +12,6 @@
 #include <thread>
 
 #include <log.h>
-#include <cycle_timer.h>
-
-#include "frontend.h"
-#include "frontends/benchmark.h"
-
-#include "backend.h"
-#include "backends/shm.h"
-
-#define CURRENT_FRONTEND benchmark
-
-#define BUFFSIZE 10
 
 int main()
 {
@@ -42,3 +33,34 @@ int main()
     }
 
 }
+
+#else
+
+#include "avr/generic.h"
+
+void start()
+{
+	setBits(PORTB, 0b100);
+	for (uint i = 10000; i > 0; ++i)
+	{
+		nop();
+		nop();
+		nop();
+	}
+	resetBits(PORTB, 0b100);
+
+	const uint cfifo_buffer_len = 512;
+	char _write_cfifo_buffer[cfifo_buffer_len];
+	cfifo _write_stackcfifo = cfifo(_write_cfifo_buffer,cfifo_buffer_len);
+	char _read_cfifo_buffer[cfifo_buffer_len];
+	cfifo _read_stackcfifo = cfifo(_read_cfifo_buffer,cfifo_buffer_len);
+
+	frontend stackfrontend(&_write_stackcfifo,&_read_stackcfifo);
+	backend stackbackend(&_write_stackcfifo,&_read_stackcfifo);
+
+	EnableInterrupts();
+
+	while (1) { nop(); }
+}
+
+#endif

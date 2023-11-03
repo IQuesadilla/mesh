@@ -1,43 +1,175 @@
-#include "backends/shm.h"
 #include "backend.h"
 
-#include <thread>
-#include <fstream>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <errno.h>
-#include <cstring>
-#include <bitset>
-#include <iostream>
+extern void FrontendPing();
 
-mesh_backend::mesh_backend(int delayms, int buffsize, int ID, std::shared_ptr<libQ::log> _log)
+backend::backend(cfifo *wfifoptr, cfifo *rfifoptr)
 {
-    _delayms = delayms;
-    _buffsize = buffsize;
+    _write_fifo = wfifoptr;
+    _read_fifo = rfifoptr;
 
-    logobj = _log;
+    MsgQueueCount = 0;
+    CurrentCycle = 0;
 
-    _ID = ID;
-    _QueuePosition = ID;
-
-    decrement_start_delay = true;
-    waiting_for_start = false; // This exists only for cleanliness in the log
-    start_delay = 42; // Should be around the size of a header but for shm would need to be technically max data length
+    BackendInit();
 }
 
-mesh_backend::~mesh_backend()
+void backend::ClockTick()
 {
-    auto log = logobj->function("~mesh_backend");
+    //WritingBody = true; // Force condition temporarily
+    switch (_state)
+    {
+    case PollingForStartBit:
+        // This wont be quite as simple as it seems. As the start bit could be multiple clock ticks,
+        // this needs to account for that, as to not write a start bit halfway through reading one.
+        // This doesn't check whether to send the message as NewDev or Emergency, for now this
+        // will be simply omitted, since no way to do indicate that is implemented yet anyway.
+        if ( MsgQueueCount )
+        {
+            WriteStartBit();
+
+            HeaderValue = QueuePos;
+            CurrentCycle = 8 * 2;
+            _state = WritingHeader;
+        }
+        else
+        {
+            // Something of the sort
+            //if ( ReadStartBit() ) // If the start bit is 1
+            {
+                HeaderValue = 0;
+                CurrentCycle = 8 * 2;
+                _state = ReadingHeader;
+            }
+        }
+        break;
+    case WritingEmergencyHeader:
+        if ( CurrentCycle )
+        {
+            HeaderValue = 0xFF;
+            WriteHeaderBit();
+        }
+        else
+        {
+            CurrentCycle = 8 * 2;
+            _state = WritingHeader;
+        }
+        break;
+    case WritingNewDeviceHeader:
+        if ( CurrentCycle )
+        {
+            ReadHeaderBit();
+        }
+        else
+        {
+            if ( HeaderValue )
+            {
+                _state = ReadingBodyLength;
+            }
+            else
+            {
+                // This is the part where it sends the Serial ID, and code for this doesn't exist yet
+                // It might just jump to WritingHeader with a higher initial CurrentCycle, but after
+                // that I don't know it would know to send the New Device Information instead of a body
+                // CurrentCycle = 8 * HeaderCycleCount;
+                //_state = ; 
+            }
+        }
+        break;
+    case WritingHeader:
+        if ( CurrentCycle )
+        {
+            uint OldHeaderValue = HeaderValue;
+            WriteHeaderBit();
+            ReadHeaderBit();
+            if ( HeaderValue > OldHeaderValue )
+            {
+                _state = ReadingHeader;
+            }
+        }
+        else
+        {
+            CurrentCycle = 12;
+            _state = WritingBodyLength;
+        }
+        break;
+    case ReadingHeader:
+        if ( CurrentCycle )
+        {
+            ReadHeaderBit();
+        }
+        else
+        {
+            CurrentCycle = 12;
+            _state = ReadingBodyLength;
+        }
+        break;
+    case WritingBodyLength:
+        if ( CurrentCycle )
+        {
+            WriteBodyLength();
+        }
+        else
+        {
+            CurrentCycle = BodyLength;
+            _state = WritingBodyContent;
+        }
+        break;
+    case ReadingBodyLength:
+        if ( CurrentCycle )
+        {
+            ReadBodyLength();
+        }
+        else
+        {
+            CurrentCycle = BodyLength;
+            _state = ReadingBodyContent;
+        }
+        break;
+    case WritingBodyContent:
+        if ( CurrentCycle )
+        {
+            WriteBodyByte();
+        }
+        else
+        {
+            // Setup for next message
+        }
+        break;
+    case ReadingBodyContent:
+        if ( CurrentCycle )
+        {
+            ReadBodyByte();
+        }
+        else
+        {
+            FrontendPing();
+        }
+        break;
+    }
 }
 
+void backend::QueueMessage()
+{
+    ++MsgQueueCount;
+}
+
+cfifo* backend::GetReadFifo()
+{
+    return _read_fifo;
+}
+
+cfifo* backend::GetWriteFifo()
+{
+    return _write_fifo;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 void mesh_backend::run_cycle()
 {
-    auto log = logobj->function("loop",waiting_for_start);
-
     _ct->new_cycle();
-    if ( !to_send.empty() && !start_delay )
+    if ( !to_send.empty() )
     {
-        waiting_for_start = false;
         if ( wire_send_header() )
         {
             wire_send_body( to_send.c_str(), to_send.length() );
@@ -48,33 +180,15 @@ void mesh_backend::run_cycle()
     {
         uint8_t value = wire_recv_bit();
 
-        if ( !waiting_for_start )
-        {
-            log << "Waiting for start bit" << libQ::loglevel::NOTEDEBUG;
-            waiting_for_start = true;
-        }
-        
-        if ( value && start_delay )
-        {
-            log << "Disable automatic start" << libQ::loglevel::NOTEDEBUG;
-            decrement_start_delay = false;
-        }
-        
         if ( value == 255 )
         {
-            waiting_for_start = false;
-            start_delay = 0;
             wire_recv();
         }
-
-        if ( start_delay && decrement_start_delay)
-            --start_delay;
     }
 }
 
 void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
 {
-    auto log = logobj->function("wire_recv");
     log << "Attempting to receive some data, QueueBit = " << int(QueueBit) << libQ::loglevel::NOTEDEBUG;
 
     for ( ; QueueBit >= 0; --QueueBit )
@@ -101,8 +215,6 @@ void mesh_backend::wire_recv(int8_t QueueBit, uint16_t inQueuePosition)
 
 bool mesh_backend::wire_send_header(header_types type)
 {
-    auto log = logobj->function("wire_send_header");
-
     int8_t QueueBit = 7;
     uint8_t inQueuePosition = 0;
     
@@ -132,8 +244,6 @@ bool mesh_backend::wire_send_header(header_types type)
 
 void mesh_backend::wire_send_body(const char *raw, uint16_t msglen)
 {
-    auto log = logobj->function("wire_send");
-
     wire_send_byte( ((char*)(&msglen))[1] );
     wire_send_byte( ((char*)(&msglen))[0] );
 
@@ -168,4 +278,4 @@ void mesh_backend::wire_recv_byte(char *byte)
         bool value = wire_recv_bit();
         *byte = (*byte)|((value)<<i);
     }
-}
+}*/
